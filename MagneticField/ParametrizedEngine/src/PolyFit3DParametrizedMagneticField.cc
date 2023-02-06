@@ -54,8 +54,7 @@ GlobalVector PolyFit3DParametrizedMagneticField::inTesla(const GlobalPoint& gp) 
   if (isDefined(gp)) {
     return inTeslaUnchecked(gp);
   } else {
-    edm::LogWarning("MagneticField|FieldOutsideValidity")
-        << " Point " << gp << " is outside the validity region of PolyFit3DParametrizedMagneticField";
+    // edm::LogWarning("MagneticField|FieldOutsideValidity") << " Point " << gp << " is outside the validity region of PolyFit3DParametrizedMagneticField";
     return GlobalVector();
   }
 }
