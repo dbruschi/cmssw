@@ -82,7 +82,7 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps):
   geomToken_(esConsumes<TrackerGeometry, TrackerDigiGeometryRecord, edm::Transition::BeginRun>()),
   transTrackToken_(esConsumes<TransientTrackBuilder, TransientTrackRecord, edm::Transition::Event>(edm::ESInputTag{"","TransientTrackBuilder"}))
 {
-  std::string name("$CMSSW_BASE/src/DQM/TrackingMonitorSource/data/BPIX_2022.txt");
+  std::string name("$CMSSW_BASE/src/DQM/TrackingMonitorSource/data/BPIX_2022_rereco.txt");
   bpixfile_.open(gSystem->ExpandPathName(name.c_str()));
   int c1;
   float c2, c3, c4;

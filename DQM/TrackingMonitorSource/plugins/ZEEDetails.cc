@@ -90,12 +90,14 @@ void ZEEDetails::bookHistograms(DQMStore::IBooker &ibook, edm::Run const& iRun, 
   ibook.setCurrentFolder(currentFolder.c_str());
   Zpt_ = ibook.book1D("Zpt", "Z-Boson p_{T}",100,0.0,100.0);
   ZInvMass_ = ibook.book1D("ZInvMass","m_{ee}",200,minInvMass_,maxInvMass_);
+  EoverP_ = ibook.book3D("EoverP","EoverP",48,-2.4,2.4,36,-3.2,3.2,100,0,10);
 }
 
 void ZEEDetails::analyze(edm::Event const& iEvent, edm::EventSetup const& iSetup) {
 
   std::vector<TLorentzVector> list;
   std::vector<int> chrgeList;
+  std::vector<reco::GsfElectron> finalelectrons;
 
   // Read Electron Collection                                                                                                                                           
   edm::Handle<reco::GsfElectronCollection> electronColl;
@@ -168,6 +170,7 @@ void ZEEDetails::analyze(edm::Event const& iEvent, edm::EventSetup const& iSetup
       lv.SetPtEtaPhiE(ele.pt(), ele.eta(), ele.phi(), ele.energy());
       list.push_back(lv);
       chrgeList.push_back(ele.charge());
+      finalelectrons.push_back(ele);
     }
   }
   else {
@@ -206,6 +209,10 @@ void ZEEDetails::analyze(edm::Event const& iEvent, edm::EventSetup const& iSetup
       }
     else 
       std::cerr << "PUSummary for input tag: " << puSummaryTag_ << " not found!!" << std::endl;
+  }
+
+  for (unsigned int I=0; I!=finalelectrons.size(); I++) {
+    EoverP_->Fill(finalelectrons[I].superCluster()->eta(), finalelectrons[I].superCluster()->phi(),finalelectrons[I].eEleClusterOverPout(),wfac);
   }
 
   if (list.size() >= 2) {

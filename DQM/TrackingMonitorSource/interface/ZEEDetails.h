@@ -77,5 +77,6 @@ private:
 
   MonitorElement* Zpt_;
   MonitorElement* ZInvMass_;
+  MonitorElement* EoverP_;
 };
 #endif
