@@ -9,18 +9,15 @@
 
 #include "BFit3D.h"
 
-
 using namespace std;
 using namespace magfieldparam;
 
-PolyFit3DParametrizedMagneticField::PolyFit3DParametrizedMagneticField(double bVal) : 
-  theParam(new BFit3D())
-{
+PolyFit3DParametrizedMagneticField::PolyFit3DParametrizedMagneticField(double bVal) : theParam(new BFit3D()) {
   theParam->SetField(bVal);
 }
 
-
-PolyFit3DParametrizedMagneticField::PolyFit3DParametrizedMagneticField(const edm::ParameterSet& parameters) : theParam(new BFit3D()) {
+PolyFit3DParametrizedMagneticField::PolyFit3DParametrizedMagneticField(const edm::ParameterSet& parameters)
+    : theParam(new BFit3D()) {
   theParam->SetField(parameters.getParameter<double>("BValue"));
 
   // Additional options (documentation by Vassili):
@@ -33,9 +30,9 @@ PolyFit3DParametrizedMagneticField::PolyFit3DParametrizedMagneticField(const edm
   // changed by the call
 
   //  theParam->UseSignedRad(false);
-  
+
   // In that case with crossing of r=0 e_r and e_phi will be flipped in
-  // such a way that e_r always points outward. In other words instead of 
+  // such a way that e_r always points outward. In other words instead of
   // (r<0, phi) the (abs(r), phi+PI) will be used in this mode.
 
   // The expansion coefficients for a nominal field in between measurement
@@ -51,42 +48,33 @@ PolyFit3DParametrizedMagneticField::PolyFit3DParametrizedMagneticField(const edm
   // physical at very low/high field values.
 }
 
+PolyFit3DParametrizedMagneticField::~PolyFit3DParametrizedMagneticField() { delete theParam; }
 
-PolyFit3DParametrizedMagneticField::~PolyFit3DParametrizedMagneticField() {
-  delete theParam;
-}
-
-
-GlobalVector
-PolyFit3DParametrizedMagneticField::inTesla(const GlobalPoint& gp) const {
-
+GlobalVector PolyFit3DParametrizedMagneticField::inTesla(const GlobalPoint& gp) const {
   if (isDefined(gp)) {
     return inTeslaUnchecked(gp);
   } else {
-    edm::LogWarning("MagneticField|FieldOutsideValidity") << " Point " << gp << " is outside the validity region of PolyFit3DParametrizedMagneticField";
+    edm::LogWarning("MagneticField|FieldOutsideValidity")
+        << " Point " << gp << " is outside the validity region of PolyFit3DParametrizedMagneticField";
     return GlobalVector();
   }
 }
 
-GlobalVector
-PolyFit3DParametrizedMagneticField::inTeslaUnchecked(const GlobalPoint& gp) const {
+GlobalVector PolyFit3DParametrizedMagneticField::inTeslaUnchecked(const GlobalPoint& gp) const {
   double Br, Bz, Bphi;
-  theParam->GetField(gp.perp()/100., gp.z()/100., gp.phi(),
-		     Br, Bz, Bphi);
+  theParam->GetField(gp.perp() / 100., gp.z() / 100., gp.phi(), Br, Bz, Bphi);
 
   double cosphi = cos(gp.phi());
   double sinphi = sin(gp.phi());
 
-  return GlobalVector(Br*cosphi - Bphi*sinphi,
-		      Br*sinphi + Bphi*cosphi, 
-		      Bz);  
+  return GlobalVector(Br * cosphi - Bphi * sinphi, Br * sinphi + Bphi * cosphi, Bz);
 }
 
-bool
-PolyFit3DParametrizedMagneticField::isDefined(const GlobalPoint& gp) const {
+bool PolyFit3DParametrizedMagneticField::isDefined(const GlobalPoint& gp) const {
   double z = fabs(gp.z());
   double r = gp.perp();
   //"rectangle" |z|<3.5, r<1.9 _except_ the "corners" |z|+2.5*r>6.7, everything in meters
-  if (z>350. || r>190 || z+2.5*r>670.) return false;
+  if (z > 350. || r > 190 || z + 2.5 * r > 670.)
+    return false;
   return true;
 }

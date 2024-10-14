@@ -11,12 +11,15 @@
 
 #include "MagneticField/Engine/interface/MagneticField.h"
 
-namespace edm { class ParameterSet; }
-namespace magfieldparam { class BFit3D; }
-
+namespace edm {
+  class ParameterSet;
+}
+namespace magfieldparam {
+  class BFit3D;
+}
 
 class PolyFit3DParametrizedMagneticField : public MagneticField {
- public:
+public:
   /// Constructor. Fitted bVal for the nominal currents are:
   /// 2.0216; 3.5162;  3.8114; 4.01242188708911
   PolyFit3DParametrizedMagneticField(double bVal = 3.8114);
@@ -26,15 +29,14 @@ class PolyFit3DParametrizedMagneticField : public MagneticField {
 
   /// Destructor
   virtual ~PolyFit3DParametrizedMagneticField();
-  
-  GlobalVector inTesla (const GlobalPoint& gp) const;
 
-  GlobalVector inTeslaUnchecked (const GlobalPoint& gp) const;
+  GlobalVector inTesla(const GlobalPoint& gp) const;
+
+  GlobalVector inTeslaUnchecked(const GlobalPoint& gp) const;
 
   bool isDefined(const GlobalPoint& gp) const;
 
- private:
+private:
   magfieldparam::BFit3D* theParam;
 };
 #endif
-

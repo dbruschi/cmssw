@@ -31,9 +31,9 @@ std::unique_ptr<MagneticField> ParametrizedMagneticFieldFactory::get(string vers
     return result;
   } else if (version == "PolyFit3D") {
     // V. Maroussov polynomial fit to mapping data
-    std::auto_ptr<MagneticField> result( new PolyFit3DParametrizedMagneticField(parameters));
+    std::auto_ptr<MagneticField> result(new PolyFit3DParametrizedMagneticField(parameters));
     return result;
-  } else if (version=="Parabolic"){
+  } else if (version == "Parabolic") {
     // FIXME implement configurable parameters to be passed to ctor
     //   vector<double> params =  parameters.getParameter<vdouble>("parameters");
     //   std::unique_ptr<MagneticField> result( new ParabolicParametrizedMagneticField(params));
