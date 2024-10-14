@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 TrackRefitter = cms.EDProducer("TrackRefitter",
+    MagneticFieldLabel = cms.string(""),
     src = cms.InputTag("generalTracks"),
     beamSpot = cms.InputTag("offlineBeamSpot"),
     Fitter = cms.string('KFFittingSmootherWithOutliersRejectionAndRK'),

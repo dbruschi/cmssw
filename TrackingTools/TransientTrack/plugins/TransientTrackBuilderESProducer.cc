@@ -12,7 +12,8 @@ using namespace edm;
 
 TransientTrackBuilderESProducer::TransientTrackBuilderESProducer(const edm::ParameterSet& p) {
   auto cc = setWhatProduced(this, p.getParameter<std::string>("ComponentName"));
-  magToken_ = cc.consumes();
+  fieldlabel_ = p.getParameter<std::string>("MagneticFieldLabel");
+  magToken_ = cc.consumes(edm::ESInputTag("", fieldlabel_));
   geomToken_ = cc.consumes();
 }
 
