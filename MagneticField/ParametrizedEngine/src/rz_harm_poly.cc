@@ -117,6 +117,8 @@ void rz_harm_poly::FillTrigArr(const double phi) {
     return;
   trig_pair tp(phi);
   TrigArr[1] = tp;
+  // FIXME this loop will be auto-vectorized in slc7_amd64_gcc700 with default
+  // compiler flags and gives incorrect results
   for (unsigned jp = 2; jp <= MaxM; ++jp)
     TrigArr[jp] = TrigArr[jp - 1].Add(tp);
 }
