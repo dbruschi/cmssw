@@ -13,13 +13,12 @@
 using namespace edm;
 
 GeantPropagatorESProducer::GeantPropagatorESProducer(const edm::ParameterSet &p)
-    : magFieldToken_(setWhatProduced(this, p.getParameter<std::string>("ComponentName"))
-                         .consumesFrom<MagneticField, IdealMagneticFieldRecord>(edm::ESInputTag("", ""))) {
+    : fieldlabel_(p.getParameter<std::string>("MagneticFieldLabel")),
+      magFieldToken_(setWhatProduced(this, p.getParameter<std::string>("ComponentName"))
+                         .consumesFrom<MagneticField, IdealMagneticFieldRecord>(edm::ESInputTag("", fieldlabel_))) {
   pset_ = p;
   plimit_ = pset_.getParameter<double>("PropagationPtotLimit");
 }
-
-GeantPropagatorESProducer::~GeantPropagatorESProducer() {}
 
 std::unique_ptr<Propagator> GeantPropagatorESProducer::produce(const TrackingComponentsRecord &iRecord) {
   std::string pdir = pset_.getParameter<std::string>("PropagationDirection");
