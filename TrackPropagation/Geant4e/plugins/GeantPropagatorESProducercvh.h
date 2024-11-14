@@ -10,7 +10,7 @@
 #include <memory>
 
 /*
- * GeantPropagatorESProducer
+ * GeantPropagatorESProducercvh
  *
  * Produces an Geant4ePropagator for track propagation
  *
@@ -19,13 +19,14 @@
 class GeantPropagatorESProducercvh : public edm::ESProducer {
 public:
   GeantPropagatorESProducercvh(const edm::ParameterSet &p);
-  ~GeantPropagatorESProducercvh() override;
+  ~GeantPropagatorESProducercvh() override = default;
 
   std::unique_ptr<Propagator> produce(const TrackingComponentsRecord &);
 
 private:
   edm::ParameterSet pset_;
-  edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
+  const std::string fieldlabel_;
+  const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
   double plimit_;
 };
 
