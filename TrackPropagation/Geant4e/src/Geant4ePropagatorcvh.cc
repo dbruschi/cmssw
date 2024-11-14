@@ -34,6 +34,7 @@
 #include "G4RunManagerKernel.hh"
 #include "G4PathFinder.hh"
 #include "G4ErrorPropagationNavigator.hh"
+#include "TrackPropagation/Geant4e/interface/G4UniversalFluctuationForExtrapolator.hh"
 
 // CLHEP
 #include "CLHEP/Units/GlobalSystemOfUnits.h"
@@ -43,7 +44,7 @@
 
 #include <Eigen/Geometry>
 
-#include "SimG4Core/MagneticField/interface/Field.h"
+#include "SimG4Core/MagneticField/interface/Fieldcvh.h"
 
 #include "Math/ProbFuncMathCore.h"
 #include "Math/QuantFuncMathCore.h"
@@ -51,7 +52,7 @@
 
 /** Constructor.
  */
-Geant4ePropagator::Geant4ePropagator(const MagneticField *field,
+Geant4ePropagatorcvh::Geant4ePropagatorcvh(const MagneticField *field,
                                      std::string particleName,
                                      PropagationDirection dir,
                                      double plimit)
@@ -91,8 +92,8 @@ Geant4ePropagator::Geant4ePropagator(const MagneticField *field,
 
 /** Destructor.
  */
-Geant4ePropagator::~Geant4ePropagator() {
-  LogDebug("Geant4e") << "Geant4ePropagator::~Geant4ePropagator()" << std::endl;
+Geant4ePropagatorcvh::~Geant4ePropagatorcvh() {
+  LogDebug("Geant4e") << "Geant4ePropagatorcvh::~Geant4ePropagatorcvh()" << std::endl;
 
   // don't close the g4 Geometry here, because the propagator might have been
   // cloned
@@ -108,7 +109,7 @@ Geant4ePropagator::~Geant4ePropagator() {
  *  in global cartesian coordinates) to a plane.
  */
 
-void Geant4ePropagator::ensureGeant4eIsInitilized(bool forceInit) const {
+void Geant4ePropagatorcvh::ensureGeant4eIsInitilized(bool forceInit) const {
   LogDebug("Geant4e") << "ensureGeant4eIsInitilized called" << std::endl;
   if ((G4ErrorPropagatorData::GetErrorPropagatorData()->GetState() == G4ErrorState_PreInit) || forceInit) {
     LogDebug("Geant4e") << "Initializing G4 propagator" << std::endl;
@@ -134,7 +135,7 @@ void Geant4ePropagator::ensureGeant4eIsInitilized(bool forceInit) const {
 }
 
 template <>
-Geant4ePropagator::ErrorTargetPair Geant4ePropagator::transformToG4SurfaceTarget(const Plane &pDest,
+Geant4ePropagatorcvh::ErrorTargetPair Geant4ePropagatorcvh::transformToG4SurfaceTarget(const Plane &pDest,
                                                                                  bool moveTargetToEndOfSurface) const {
   //* Get position and normal (orientation) of the destination plane
   GlobalPoint posPlane = pDest.toGlobal<double>(LocalPoint(0, 0, 0));
@@ -153,7 +154,7 @@ Geant4ePropagator::ErrorTargetPair Geant4ePropagator::transformToG4SurfaceTarget
 }
 
 template <>
-Geant4ePropagator::ErrorTargetPair Geant4ePropagator::transformToG4SurfaceTargetD(const GloballyPositioned<double> &pDest,
+Geant4ePropagatorcvh::ErrorTargetPair Geant4ePropagatorcvh::transformToG4SurfaceTargetD(const GloballyPositioned<double> &pDest,
                                                                                  bool moveTargetToEndOfSurface) const {
   //* Get position and normal (orientation) of the destination plane
 //   Point3DBase<double, GlobalTag> posPlane = pDest.toGlobal<double>(Point3DBase<double, LocalTag>(0, 0, 0));
@@ -178,7 +179,7 @@ Geant4ePropagator::ErrorTargetPair Geant4ePropagator::transformToG4SurfaceTarget
 }
 
 template <>
-Geant4ePropagator::ErrorTargetPair Geant4ePropagator::transformToG4SurfaceTarget(const Cylinder &pDest,
+Geant4ePropagatorcvh::ErrorTargetPair Geant4ePropagatorcvh::transformToG4SurfaceTarget(const Cylinder &pDest,
                                                                                  bool moveTargetToEndOfSurface) const {
   // Get Cylinder parameters.
   // CMS uses cm and GeV while Geant4 uses mm and MeV.
@@ -198,16 +199,16 @@ Geant4ePropagator::ErrorTargetPair Geant4ePropagator::transformToG4SurfaceTarget
 }
 
 template <>
-std::string Geant4ePropagator::getSurfaceType(Cylinder const &c) const {
+std::string Geant4ePropagatorcvh::getSurfaceType(Cylinder const &c) const {
   return "Cylinder";
 }
 
 template <>
-std::string Geant4ePropagator::getSurfaceType(Plane const &c) const {
+std::string Geant4ePropagatorcvh::getSurfaceType(Plane const &c) const {
   return "Plane";
 }
 
-std::string Geant4ePropagator::generateParticleName(int charge) const {
+std::string Geant4ePropagatorcvh::generateParticleName(int charge) const {
   std::string particleName = theParticleName;
 
   if (charge > 0) {
@@ -223,7 +224,7 @@ std::string Geant4ePropagator::generateParticleName(int charge) const {
 }
 
 template <>
-bool Geant4ePropagator::configureAnyPropagation(G4ErrorMode &mode,
+bool Geant4ePropagatorcvh::configureAnyPropagation(G4ErrorMode &mode,
                                                 GloballyPositioned<double> const &pDest,
                                                 GlobalPoint const &cmsInitPos,
                                                 GlobalVector const &cmsInitMom) const {
@@ -245,7 +246,7 @@ bool Geant4ePropagator::configureAnyPropagation(G4ErrorMode &mode,
 }
 
 template <>
-bool Geant4ePropagator::configureAnyPropagation(G4ErrorMode &mode,
+bool Geant4ePropagatorcvh::configureAnyPropagation(G4ErrorMode &mode,
                                                 Plane const &pDest,
                                                 GlobalPoint const &cmsInitPos,
                                                 GlobalVector const &cmsInitMom) const {
@@ -267,7 +268,7 @@ bool Geant4ePropagator::configureAnyPropagation(G4ErrorMode &mode,
 }
 
 template <>
-bool Geant4ePropagator::configureAnyPropagation(G4ErrorMode &mode,
+bool Geant4ePropagatorcvh::configureAnyPropagation(G4ErrorMode &mode,
                                                 Cylinder const &pDest,
                                                 GlobalPoint const &cmsInitPos,
                                                 GlobalVector const &cmsInitMom) const {
@@ -292,7 +293,7 @@ bool Geant4ePropagator::configureAnyPropagation(G4ErrorMode &mode,
 }
 
 template <class SurfaceType>
-bool Geant4ePropagator::configurePropagation(G4ErrorMode &mode,
+bool Geant4ePropagatorcvh::configurePropagation(G4ErrorMode &mode,
                                              SurfaceType const &pDest,
                                              GlobalPoint const &cmsInitPos,
                                              GlobalVector const &cmsInitMom) const {
@@ -315,7 +316,7 @@ bool Geant4ePropagator::configurePropagation(G4ErrorMode &mode,
 }
 
 template <class SurfaceType>
-std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateGeneric(const FreeTrajectoryState &ftsStart,
+std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGeneric(const FreeTrajectoryState &ftsStart,
                                                                                 const SurfaceType &pDest) const {
   ///////////////////////////////
   // Construct the target surface
@@ -500,7 +501,7 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateGeneric(
   return TsosPP(TrajectoryStateOnSurface(tParsDest, curvError, pDest, side), finalPathLength);
 }
 
- std::tuple<bool, Eigen::Matrix<double, 7, 1>, Eigen::Matrix<double, 5, 5>, Eigen::Matrix<double, 5, 7>, double, Eigen::Matrix<double, 5, 5>, Eigen::Matrix<double, 5, 5>, double, double> Geant4ePropagator::propagateGenericWithJacobianAltD(const Eigen::Matrix<double, 7, 1> &ftsStart,
+ std::tuple<bool, Eigen::Matrix<double, 7, 1>, Eigen::Matrix<double, 5, 5>, Eigen::Matrix<double, 5, 7>, double, Eigen::Matrix<double, 5, 5>, Eigen::Matrix<double, 5, 5>, double, double> Geant4ePropagatorcvh::propagateGenericWithJacobianAltD(const Eigen::Matrix<double, 7, 1> &ftsStart,
                                                                                 const GloballyPositioned<double> &pDest, double dBz, double dxi, double dms, double dioni, double pforced) const {
                           
   using namespace Eigen;
@@ -1116,7 +1117,7 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateGeneric(
  *  exact path length along the trajectory.
  */
 
-std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath(const FreeTrajectoryState &ftsStart,
+std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateWithPath(const FreeTrajectoryState &ftsStart,
                                                                                  const Plane &pDest) const {
   // Finally build the pair<...> that needs to be returned where the second
   // parameter is the exact path length. Currently calculated with a stepping
@@ -1124,14 +1125,14 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath
   return propagateGeneric(ftsStart, pDest);
 }
 
-std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath(const FreeTrajectoryState &ftsStart,
+std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateWithPath(const FreeTrajectoryState &ftsStart,
                                                                                  const Cylinder &cDest) const {
   // Finally build the pair<...> that needs to be returned where the second
   // parameter is the exact path length.
   return propagateGeneric(ftsStart, cDest);
 }
 
-std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath(
+std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateWithPath(
     const TrajectoryStateOnSurface &tsosStart, const Plane &pDest) const {
   // Finally build the pair<...> that needs to be returned where the second
   // parameter is the exact path length.
@@ -1139,7 +1140,7 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath
   return propagateGeneric(ftsStart, pDest);
 }
 
-std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath(
+std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateWithPath(
     const TrajectoryStateOnSurface &tsosStart, const Cylinder &cDest) const {
   const FreeTrajectoryState ftsStart = *tsosStart.freeState();
   // Finally build the pair<...> that needs to be returned where the second
@@ -1147,7 +1148,7 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagator::propagateWithPath
   return propagateGeneric(ftsStart, cDest);
 }
 
-void Geant4ePropagator::debugReportPlaneSetup(GlobalPoint const &posPlane,
+void Geant4ePropagatorcvh::debugReportPlaneSetup(GlobalPoint const &posPlane,
                                               HepGeom::Point3D<double> const &surfPos,
                                               GlobalVector const &normalPlane,
                                               HepGeom::Normal3D<double> const &surfNorm,
@@ -1163,7 +1164,7 @@ void Geant4ePropagator::debugReportPlaneSetup(GlobalPoint const &posPlane,
 }
 
 template <class SurfaceType>
-void Geant4ePropagator::debugReportTrackState(std::string const &currentContext,
+void Geant4ePropagatorcvh::debugReportTrackState(std::string const &currentContext,
                                               GlobalPoint const &cmsInitPos,
                                               CLHEP::Hep3Vector const &g4InitPos,
                                               GlobalVector const &cmsInitMom,
@@ -1180,7 +1181,7 @@ void Geant4ePropagator::debugReportTrackState(std::string const &currentContext,
 
 
 //------------------------------------------------------------------------
-Eigen::Matrix<double, 5, 5> Geant4ePropagator::PropagateErrorMSC( const G4Track* aTrack, double pforced) const
+Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Track* aTrack, double pforced) const
 { 
   G4ThreeVector vpPre = aTrack->GetMomentum()/GeV;
 //   G4double pPre = vpPre.mag();
@@ -1476,7 +1477,7 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagator::PropagateErrorMSC( const G4Track*
 
 
 //------------------------------------------------------------------------
-std::pair<double, double> Geant4ePropagator::computeLandau(const G4Track* aTrack) const
+std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTrack) const
 {
 
   G4double stepLengthCm = aTrack->GetStep()->GetStepLength() / cm;
@@ -1600,7 +1601,7 @@ std::pair<double, double> Geant4ePropagator::computeLandau(const G4Track* aTrack
 }
 
 //------------------------------------------------------------------------
-double Geant4ePropagator::computeErrorIoni(const G4Track* aTrack, double pforced) const
+double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pforced) const
 {
   G4double stepLengthCm = aTrack->GetStep()->GetStepLength() / cm;
 #ifdef G4EVERBOSE
@@ -1843,7 +1844,7 @@ double Geant4ePropagator::computeErrorIoni(const G4Track* aTrack, double pforced
 //         XI / Emax * 100;  // Quench for low Elos, see above: newVar=odVar *k/0.01
 //   }
   
-//   std::cout << "Geant4ePropagator xi = " << XI << " emax = " << Emax << " dedxSq = " << dedxSq << std::endl;
+//   std::cout << "Geant4ePropagatorcvh xi = " << XI << " emax = " << Emax << " dedxSq = " << dedxSq << std::endl;
 
 #ifdef G4EVERBOSE
   if(iverbose >= 2)
@@ -1872,7 +1873,7 @@ double Geant4ePropagator::computeErrorIoni(const G4Track* aTrack, double pforced
 }
 
 //------------------------------------------------------------------------
-void Geant4ePropagator::CalculateEffectiveZandA(const G4Material* mate,
+void Geant4ePropagatorcvh::CalculateEffectiveZandA(const G4Material* mate,
                                                    G4double& effZ,
                                                    G4double& effA)
 {
@@ -1887,7 +1888,7 @@ void Geant4ePropagator::CalculateEffectiveZandA(const G4Material* mate,
   }
 }
 
-Eigen::Matrix<double, 5, 7> Geant4ePropagator::transportJacobianBzD(const Eigen::Matrix<double, 7, 1> &start, double s, double dEdx, double mass, double dBz) const {
+Eigen::Matrix<double, 5, 7> Geant4ePropagatorcvh::transportJacobianBzD(const Eigen::Matrix<double, 7, 1> &start, double s, double dEdx, double mass, double dBz) const {
   
   if (s==0.) {
     Eigen::Matrix<double, 5, 7> res;

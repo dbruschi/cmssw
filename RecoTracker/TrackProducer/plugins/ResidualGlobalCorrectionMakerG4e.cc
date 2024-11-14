@@ -315,7 +315,7 @@ void ResidualGlobalCorrectionMakerG4e::produce(edm::Event &iEvent, const edm::Ev
 
   edm::ESHandle<Propagator> thePropagator = iSetup.getHandle(thePropagatorToken_);
   
-  const Geant4ePropagator *g4prop = dynamic_cast<const Geant4ePropagator*>(thePropagator.product());
+  const Geant4ePropagatorcvh *g4prop = dynamic_cast<const Geant4ePropagatorcvh*>(thePropagator.product());
   const MagneticField* field = thePropagator->magneticField();
   
   constexpr double mmu = 0.1056583745;

@@ -35,6 +35,7 @@
 <use name="Utilities/General"/>
 <use name="TrackPropagation/RungeKutta"/>
 <use name="TrackPropagation/Geant4e"/>
+<use name="SimG4Core/MagneticField"/>
 <export>
   <lib name="1"/>
 </export>

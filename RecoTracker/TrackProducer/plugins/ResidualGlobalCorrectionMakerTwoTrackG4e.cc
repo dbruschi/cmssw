@@ -416,7 +416,7 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
   edm::ESHandle<Propagator> thePropagator = iSetup.getHandle(thePropagatorToken_);
 
   const MagneticField* field = thePropagator->magneticField();
-  const Geant4ePropagator *g4prop = dynamic_cast<const Geant4ePropagator*>(thePropagator.product());
+  const Geant4ePropagatorcvh *g4prop = dynamic_cast<const Geant4ePropagatorcvh*>(thePropagator.product());
   
 //   Handle<std::vector<reco::GenParticle>> genPartCollection;
   Handle<edm::View<reco::Candidate>> genPartCollection;

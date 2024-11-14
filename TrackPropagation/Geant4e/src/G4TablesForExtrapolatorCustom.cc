@@ -196,8 +196,6 @@ void G4TablesForExtrapolatorCustom::Initialisation()
     couples[i] = new G4MaterialCutsCouple((*mtable)[i],pcuts);  
   }
 
-  splineFlag = G4EmParameters::Instance()->Spline();
-
   dedxElectron     = PrepareTable();
   dedxPositron     = PrepareTable();
   dedxMuon         = PrepareTable();
@@ -261,10 +259,9 @@ G4PhysicsTable* G4TablesForExtrapolatorCustom::PrepareTable()
 {
   G4PhysicsTable* table = new G4PhysicsTable();
 
-  for(G4int i=0; i<nmat; ++i) {  
-
-    G4PhysicsVector* v = new G4PhysicsLogVector(emin, emax, nbins);
-    v->SetSpline(splineFlag);
+  G4int n = (G4int)table->length();
+  for(G4int i=n; i<nmat; ++i) {  
+    G4PhysicsVector* v = new G4PhysicsLogVector(emin, emax, nbins, splineFlag);
     table->push_back(v);
   }
   return table;
@@ -420,7 +417,7 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
 //     const double cut = 0.121694;
     
     G4double effZ, effA;
-    Geant4ePropagator::CalculateEffectiveZandA(mat, effZ, effA);
+    Geant4ePropagatorcvh::CalculateEffectiveZandA(mat, effZ, effA);
     G4double I = 16.*pow(effZ,0.9);
     const double f2 = effZ <= 2. ? 0. : 2./effZ;
     const double f1 = 1. - f2;

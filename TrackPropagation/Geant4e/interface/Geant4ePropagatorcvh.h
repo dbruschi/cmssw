@@ -22,7 +22,7 @@
  *  See that class for more details.
  */
 
-class Geant4ePropagator : public Propagator {
+class Geant4ePropagatorcvh : public Propagator {
 public:
   
   typedef ROOT::Math::SMatrix<double, 5, 7, ROOT::Math::MatRepStd<double, 5, 7> > AlgebraicMatrix57;
@@ -32,12 +32,12 @@ public:
    * Without the charge, i.e. "mu", "pi", ...
    *  * The propagation direction. It may be: alongMomentum, oppositeToMomentum
    */
-  Geant4ePropagator(const MagneticField *field = nullptr,
+  Geant4ePropagatorcvh(const MagneticField *field = nullptr,
                     std::string particleName = "mu",
                     PropagationDirection dir = alongMomentum,
                     double plimit = 1.0);
 
-  ~Geant4ePropagator() override;
+  ~Geant4ePropagatorcvh() override;
 
   /** Propagate from a free state (e.g. position and momentum in
    *  in global cartesian coordinates) to a surface.
@@ -82,7 +82,7 @@ public:
   std::pair<TrajectoryStateOnSurface, double> propagateWithPath(const TrajectoryStateOnSurface &,
                                                                 const Cylinder &) const override;
 
-  Geant4ePropagator *clone() const override { return new Geant4ePropagator(*this); }
+  Geant4ePropagatorcvh *clone() const override { return new Geant4ePropagatorcvh(*this); }
 
   const MagneticField *magneticField() const override { return theField; }
                                                                

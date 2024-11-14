@@ -82,12 +82,19 @@ public:
                                       const G4DynamicParticle*,
                                       G4double,
                                       G4double,
-                                      G4double) { return 0.; }
+                                      G4double,
+                                      G4double) override { return 0.; }
 
   virtual G4double Dispersion(const G4Material*,
                               const G4DynamicParticle*,
                               G4double,
                               G4double);
+
+  virtual G4double Dispersion(const G4Material*,
+                              const G4DynamicParticle*,
+                              G4double,
+                              G4double,
+                              G4double) override;
 
   virtual void InitialiseMe(const G4ParticleDefinition*) final;
 

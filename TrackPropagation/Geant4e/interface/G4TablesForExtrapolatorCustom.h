@@ -139,7 +139,7 @@ private:
   G4double    mass;
   G4double    charge2;
 
-  G4bool      splineFlag;
+  G4bool      splineFlag=false;
 
   G4bool      ionOnly;
 };

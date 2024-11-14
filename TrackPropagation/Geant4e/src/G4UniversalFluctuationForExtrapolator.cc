@@ -558,6 +558,16 @@ G4double G4UniversalFluctuationForExtrapolator::Dispersion(
   return siga;
 }
 
+G4double G4UniversalFluctuationForExtrapolator::Dispersion(
+                          const G4Material* material,
+                          const G4DynamicParticle* dp,
+                                G4double tmax,
+                                G4double length,
+                                G4double third)
+{
+  return G4UniversalFluctuationForExtrapolator::Dispersion(material, dp, tmax, length);
+}
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 void 
