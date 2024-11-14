@@ -19,13 +19,14 @@
 class GeantPropagatorESProducer : public edm::ESProducer {
 public:
   GeantPropagatorESProducer(const edm::ParameterSet &p);
-  ~GeantPropagatorESProducer() override;
+  ~GeantPropagatorESProducer() override = default;
 
   std::unique_ptr<Propagator> produce(const TrackingComponentsRecord &);
 
 private:
   edm::ParameterSet pset_;
-  edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
+  const std::string fieldlabel_;
+  const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
   double plimit_;
 };
 
