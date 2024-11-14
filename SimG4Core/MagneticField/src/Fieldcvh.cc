@@ -8,7 +8,7 @@
 
 using namespace sim;
 
-Field::Field(const MagneticField *f, double d) : G4MagneticField(), theCMSMagneticField(f), theDelta(d), dxi(0.) {
+Fieldcvh::Fieldcvh(const MagneticField *f, double d) : G4MagneticField(), theCMSMagneticField(f), theDelta(d), dxi(0.) {
   for (int i = 0; i < 3; ++i) {
     oldx[i] = 1.0e12;
     oldb[i] = 0.0;
@@ -18,9 +18,9 @@ Field::Field(const MagneticField *f, double d) : G4MagneticField(), theCMSMagnet
   std::cout << "Field constructor" << std::endl;
 }
 
-Field::~Field() {}
+Fieldcvh::~Fieldcvh() {}
 
-void Field::GetFieldValue(const G4double xyz[4], G4double bfield[3]) const {
+void Fieldcvh::GetFieldValue(const G4double xyz[4], G4double bfield[3]) const {
   if (std::abs(oldx[0] - xyz[0]) > theDelta || std::abs(oldx[1] - xyz[1]) > theDelta ||
       std::abs(oldx[2] - xyz[2]) > theDelta) {
     static const float lunit = (float)(1.0 / CLHEP::cm);
@@ -41,7 +41,7 @@ void Field::GetFieldValue(const G4double xyz[4], G4double bfield[3]) const {
   bfield[2] = oldb[2] + offset[2];
 }
 
-void Field::SetOffset(double x, double y, double z) {  
+void Fieldcvh::SetOffset(double x, double y, double z) {  
   offset[0] = x*CLHEP::tesla;
   offset[1] = y*CLHEP::tesla;
   offset[2] = z*CLHEP::tesla;

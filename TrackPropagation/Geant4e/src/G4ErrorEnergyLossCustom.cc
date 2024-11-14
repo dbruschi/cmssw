@@ -70,7 +70,7 @@ G4ErrorEnergyLossCustom::AlongStepDoIt(const G4Track& aTrack, const G4Step& aSte
   G4ErrorPropagatorData* g4edata =  G4ErrorPropagatorData::GetErrorPropagatorData();
 
   const G4Field *field = G4TransportationManager::GetTransportationManager()->GetFieldManager()->GetDetectorField();
-  const sim::Field *cmsField = static_cast<const sim::Field*>(field);
+  const sim::Fieldcvh *cmsField = static_cast<const sim::Fieldcvh*>(field);
   const double dxi = cmsField->GetMaterialOffset();
   const double xifact = std::exp(dxi);
 

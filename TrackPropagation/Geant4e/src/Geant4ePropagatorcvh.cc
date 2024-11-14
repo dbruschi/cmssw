@@ -325,7 +325,7 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
   const G4Field *field = G4TransportationManager::GetTransportationManager()->GetFieldManager()->GetDetectorField();
 //   //FIXME check thread safety of this
-//   sim::Field *cmsField = const_cast<sim::Field*>(static_cast<const sim::Field*>(field));
+//   sim::Fieldcvh *cmsField = const_cast<sim::Fieldcvh*>(static_cast<const sim::Fieldcvh*>(field));
 //   
 // //   cmsField->SetOffset(0., 0., dBz);
 // //   cmsField->SetMaterialOffset(dxi);
@@ -509,7 +509,7 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
             
   const G4Field *field = G4TransportationManager::GetTransportationManager()->GetFieldManager()->GetDetectorField();
   //FIXME check thread safety of this
-  sim::Field *cmsField = const_cast<sim::Field*>(static_cast<const sim::Field*>(field));
+  sim::Fieldcvh *cmsField = const_cast<sim::Fieldcvh*>(static_cast<const sim::Fieldcvh*>(field));
   
   cmsField->SetOffset(0., 0., dBz);
   cmsField->SetMaterialOffset(dxi);
