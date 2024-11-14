@@ -3,7 +3,9 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/ModuleFactory.h"
 #include "GeantPropagatorESProducer.h"
+#include "GeantPropagatorESProducercvh.h"
 
 #include "FWCore/Utilities/interface/typelookup.h"
 
 DEFINE_FWK_EVENTSETUP_MODULE(GeantPropagatorESProducer);
+DEFINE_FWK_EVENTSETUP_MODULE(GeantPropagatorESProducercvh);
