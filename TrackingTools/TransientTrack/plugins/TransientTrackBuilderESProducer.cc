@@ -26,5 +26,6 @@ void TransientTrackBuilderESProducer::fillDescriptions(edm::ConfigurationDescrip
   desc.add<std::string>("ComponentName", "TransientTrackBuilder")
       ->setComment("data label to use when getting the data product");
 
+  desc.add<std::string>("MagneticFieldLabel", std::string())->setComment("data label to get the magnetic field");
   descriptions.addDefault(desc);
 }
