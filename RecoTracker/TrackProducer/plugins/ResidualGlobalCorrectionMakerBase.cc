@@ -9,7 +9,6 @@
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ESHandle.h"
-#include "FWCore/Utilities/interface/ESProductTag.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
@@ -50,6 +49,9 @@
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
 #include "TrackingTools/Records/interface/TransientRecHitRecord.h" 
 #include "RecoTracker/TransientTrackingRecHit/interface/TkTransientTrackingRecHitBuilder.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 #include "DataFormats/TrackerRecHit2D/interface/TkCloner.h"
@@ -109,7 +111,14 @@
 //
 // constructors and destructor
 //
-ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::ParameterSet &iConfig)
+ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::ParameterSet &iConfig):  globalGeometryNominalToken_(esConsumes()),
+globalGeometryIdealToken_(esConsumes()),
+trackerTopologyToken_(esConsumes()),
+magfieldToken_(esConsumes()),
+globalGeometryToken_(esConsumes()),
+ttrhToken_(esConsumes()),
+thePropagatorToken_(esConsumes()),
+TTBuilderToken_(esConsumes())
 
 {
   //now do what ever initialization is needed
@@ -206,14 +215,6 @@ ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::
   
 
   outprefix = iConfig.getUntrackedParameter<std::string>("outprefix", "globalcor");
-  globalGeometryNominalToken_ = esConsumes();
-  edm::ESProductTag<GlobalTrackingGeometry, GlobalTrackingGeometryRecord>("", "");
-  globalGeometryIdealToken_ = esConsumes();
-  edm::ESProductTag<TrackerGeometry, TrackerDigiGeometryRecord>("", "idealForDigi");
-  trackerTopologyToken_ = esConsumes();
-  edm::ESProductTag<TrackerTopology, TrackerTopologyRcd>("", "");
-  magfieldToken_ = esConsumes();
-  edm::ESProductTag<MagneticField, IdealMagneticFieldRecord>("", fieldlabel_);
 
 }
 

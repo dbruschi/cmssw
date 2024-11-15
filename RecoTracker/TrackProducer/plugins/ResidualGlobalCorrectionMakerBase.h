@@ -50,6 +50,9 @@
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
 #include "TrackingTools/Records/interface/TransientRecHitRecord.h" 
 #include "RecoTracker/TransientTrackingRecHit/interface/TkTransientTrackingRecHitBuilder.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 #include "DataFormats/TrackerRecHit2D/interface/TkCloner.h"
@@ -505,10 +508,14 @@ protected:
   
 //   bool filledRunTree_;
 
-  edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryNominalToken_;
-  edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> globalGeometryIdealToken_;
-  edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyToken_;
-  edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magfieldToken_;
+  const edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryNominalToken_;
+  const edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> globalGeometryIdealToken_;
+  const edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyToken_;
+  const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magfieldToken_;
+  const edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryToken_;
+  const edm::ESGetToken<TransientTrackingRecHitBuilder, TransientRecHitRecord> ttrhToken_;
+  const edm::ESGetToken<Propagator, TrackingComponentsRecord> thePropagatorToken_;
+  const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> TTBuilderToken_;
   
 };
 

@@ -23,7 +23,6 @@
 #include "Math/Vector4Dfwd.h"
 
 #include "TrackPropagation/Geant4e/interface/Geant4ePropagatorcvh.h"
-#include "FWCore/Utilities/interface/ESProductTag.h"
 
 #include "FWCore/Common/interface/TriggerNames.h"
 
@@ -196,12 +195,6 @@ private:
   
   float dmassconvval_cons0 = 0.;
   float dinvmasssqconvval_cons0 = 0.;
-
-  edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryToken_;
-  edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyToken_;
-  edm::ESGetToken<TransientTrackingRecHitBuilder, TransientRecHitRecord> ttrhToken_;
-  edm::ESGetToken<Propagator, TrackingComponentsRecord> thePropagatorToken_;
-  edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> TTBuilderToken_;
   
 //   std::vector<float> hessv;
   
@@ -216,16 +209,6 @@ ResidualGlobalCorrectionMakerTwoTrackG4e::ResidualGlobalCorrectionMakerTwoTrackG
   doMassConstraint_ = iConfig.getParameter<bool>("doMassConstraint");
   massConstraint_ = iConfig.getParameter<double>("massConstraint");
   massConstraintWidth_ = iConfig.getParameter<double>("massConstraintWidth");
-  globalGeometryToken_ = esConsumes();
-  edm::ESProductTag<GlobalTrackingGeometry, GlobalTrackingGeometryRecord>("", "");
-  trackerTopologyToken_ = esConsumes();
-  edm::ESProductTag<TrackerTopology, TrackerTopologyRcd>("", "");
-  ttrhToken_ = esConsumes();
-  edm::ESProductTag<TransientTrackingRecHitBuilder, TransientRecHitRecord>("", "WithAngleAndTemplate");
-  thePropagatorToken_ = esConsumes();
-  edm::ESProductTag<Propagator, TrackingComponentsRecord>("", "Geant4ePropagator");
-  TTBuilderToken_ = esConsumes();
-  edm::ESProductTag<TransientTrackBuilder, TransientTrackRecord>("", "TransientTrackBuilder");
 }
 
 void ResidualGlobalCorrectionMakerTwoTrackG4e::beginStream(edm::StreamID streamid)

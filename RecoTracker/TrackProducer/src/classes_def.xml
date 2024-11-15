@@ -4,4 +4,7 @@
       <class name = "edm::Wrapper<edm::ValueMap<std::vector<int> > >" />
       <class name="edm::ValueMap<std::vector<float>>"/>
       <class name = "edm::Wrapper<edm::ValueMap<std::vector<float> > >" />
+      <class name = "edm::Association<std::vector<pat::Muon> >" />
+      <class name = "edm::Wrapper<edm::Association<std::vector<pat::Muon> > >" />
+      <class name = "edm::RefProd<std::vector<pat::Muon> >"/>
 </lcgdict>
