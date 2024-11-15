@@ -49,9 +49,6 @@
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHitBuilder.h"
 #include "TrackingTools/Records/interface/TransientRecHitRecord.h" 
 #include "RecoTracker/TransientTrackingRecHit/interface/TkTransientTrackingRecHitBuilder.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 #include "DataFormats/TrackerRecHit2D/interface/TkCloner.h"
@@ -111,14 +108,7 @@
 //
 // constructors and destructor
 //
-ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::ParameterSet &iConfig):  globalGeometryNominalToken_(esConsumes()),
-globalGeometryIdealToken_(esConsumes()),
-trackerTopologyToken_(esConsumes()),
-magfieldToken_(esConsumes()),
-globalGeometryToken_(esConsumes()),
-ttrhToken_(esConsumes()),
-thePropagatorToken_(esConsumes()),
-TTBuilderToken_(esConsumes())
+ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::ParameterSet &iConfig)
 
 {
   //now do what ever initialization is needed
@@ -215,6 +205,10 @@ TTBuilderToken_(esConsumes())
   
 
   outprefix = iConfig.getUntrackedParameter<std::string>("outprefix", "globalcor");
+  globalGeometryNominalToken_ = esConsumes<edm::Transition::BeginRun>();
+  globalGeometryIdealToken_ = esConsumes<edm::Transition::BeginRun>(edm::ESInputTag("", "idealForDigi"));
+  trackerTopologyToken_ = esConsumes<edm::Transition::BeginRun>();
+  magfieldToken_ = esConsumes<edm::Transition::BeginRun>(edm::ESInputTag("", fieldlabel_));
 
 }
 

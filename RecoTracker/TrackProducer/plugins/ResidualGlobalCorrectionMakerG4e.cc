@@ -74,6 +74,11 @@ private:
   edm::EDPutTokenT<edm::ValueMap<std::vector<float>>> outputJacRef_;
   edm::EDPutTokenT<edm::ValueMap<std::vector<float>>> outputMomCov_;
 
+  edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryToken_;
+  edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyToken_;
+  edm::ESGetToken<TransientTrackingRecHitBuilder, TransientRecHitRecord> ttrhToken_;
+  edm::ESGetToken<Propagator, TrackingComponentsRecord> thePropagatorToken_;
+
 };
 
 
@@ -94,6 +99,10 @@ ResidualGlobalCorrectionMakerG4e::ResidualGlobalCorrectionMakerG4e(const edm::Pa
 
   outputJacRef_ = produces<edm::ValueMap<std::vector<float>>>("jacRef");
   outputMomCov_ = produces<edm::ValueMap<std::vector<float>>>("momCov");
+  globalGeometryToken_ = esConsumes();
+  trackerTopologyToken_ = esConsumes();
+  ttrhToken_ = esConsumes(edm::ESInputTag("", "WithAngleAndTemplate"));
+  thePropagatorToken_ = esConsumes(edm::ESInputTag("", "Geant4ePropagatorcvh"));
   
 }
 
