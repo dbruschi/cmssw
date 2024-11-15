@@ -1,7 +1,6 @@
 #include "ResidualGlobalCorrectionMakerBase.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "TrackPropagation/Geant4e/interface/Geant4ePropagatorcvh.h"
-#include "FWCore/Utilities/interface/ESProductTag.h"
 
 
 #include "DataFormats/PatCandidates/interface/Muon.h"
@@ -75,11 +74,6 @@ private:
   edm::EDPutTokenT<edm::ValueMap<std::vector<float>>> outputJacRef_;
   edm::EDPutTokenT<edm::ValueMap<std::vector<float>>> outputMomCov_;
 
-  edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryToken_;
-  edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopologyToken_;
-  edm::ESGetToken<TransientTrackingRecHitBuilder, TransientRecHitRecord> ttrhToken_;
-  edm::ESGetToken<Propagator, TrackingComponentsRecord> thePropagatorToken_;
-
 };
 
 
@@ -100,14 +94,6 @@ ResidualGlobalCorrectionMakerG4e::ResidualGlobalCorrectionMakerG4e(const edm::Pa
 
   outputJacRef_ = produces<edm::ValueMap<std::vector<float>>>("jacRef");
   outputMomCov_ = produces<edm::ValueMap<std::vector<float>>>("momCov");
-  globalGeometryToken_ = esConsumes();
-  edm::ESProductTag<GlobalTrackingGeometry, GlobalTrackingGeometryRecord>("", "");
-  trackerTopologyToken_ = esConsumes();
-  edm::ESProductTag<TrackerTopology, TrackerTopologyRcd>("", "");
-  ttrhToken_ = esConsumes();
-  edm::ESProductTag<TransientTrackingRecHitBuilder, TransientRecHitRecord>("", "WithAngleAndTemplate");
-  thePropagatorToken_ = esConsumes();
-  edm::ESProductTag<Propagator, TrackingComponentsRecord>("", "Geant4ePropagator");
   
 }
 

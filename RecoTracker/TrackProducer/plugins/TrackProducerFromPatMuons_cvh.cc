@@ -1,4 +1,5 @@
-#include "FWCore/Framework/interface/stream/EDProducer.h"
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/global/EDProducer.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "DataFormats/TrackReco/interface/Track.h"
@@ -6,17 +7,17 @@
 #include "DataFormats/TrackReco/interface/TrackExtraFwd.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 
-class TrackProducerFromPatMuons_cvh : public edm::stream::EDProducer<>
+class TrackProducerFromPatMuons_cvh : public edm::global::EDProducer<>
 {
 public:
   explicit TrackProducerFromPatMuons_cvh(const edm::ParameterSet &);
-  ~TrackProducerFromPatMuons_cvh() {}
+  ~TrackProducerFromPatMuons_cvh() override = default;
 
 //   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
 
 private:
   
-  virtual void produce(edm::Event &, const edm::EventSetup &) override;
+  void produce(edm::StreamID, edm::Event &, const edm::EventSetup &) const override;
   
   edm::EDGetTokenT<std::vector<pat::Muon>> inputMuons_;
   edm::EDPutTokenT<reco::TrackCollection> outputTrack_;
@@ -38,8 +39,8 @@ TrackProducerFromPatMuons_cvh::TrackProducerFromPatMuons_cvh(const edm::Paramete
 }
 
 // ------------ method called for each event  ------------
-void TrackProducerFromPatMuons_cvh::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
-{
+void TrackProducerFromPatMuons_cvh::produce(edm::StreamID, edm::Event &iEvent, const edm::EventSetup &iSetup) const {
+
   using namespace edm;
   
   Handle<std::vector<pat::Muon>> muons;

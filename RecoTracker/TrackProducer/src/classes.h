@@ -1,6 +1,8 @@
 #include "Math/SMatrix.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/Common/interface/Wrapper.h"
+#include "DataFormats/Common/interface/RefProd.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
 
 #ifdef USE_REFLEX
 #include "Cintex/Cintex.h"
