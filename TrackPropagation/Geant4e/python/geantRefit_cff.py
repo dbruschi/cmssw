@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 ## Load propagator
-from TrackPropagation.Geant4e.Geant4ePropagator_cfi import *
+from TrackPropagation.Geant4e.Geant4ePropagatorcvh_cfi import *
 
 
 from TrackingTools.TrackRefitter.TracksToTrajectories_cff import *
@@ -11,10 +11,11 @@ from SimG4Core.Application.g4SimHits_cfi import g4SimHits as _g4SimHits
 
 ## Set up geometry
 geopro = cms.EDProducer("GeometryProducer",
-     GeoFromDD4hep = cms.bool(False),
-     UseMagneticField = cms.bool(True),
-     UseSensitiveDetectors = cms.bool(False),
-     MagneticField =  _g4SimHits.MagneticField.clone()
+                        GeoFromDD4hep = cms.bool(False),
+                        MagneticFieldLabel = cms.string(""),
+                        UseMagneticField = cms.bool(True),
+                        UseSensitiveDetectors = cms.bool(False),
+                        MagneticField =  _g4SimHits.MagneticField.clone()
 )
 
 from Configuration.ProcessModifiers.dd4hep_cff import dd4hep
@@ -24,16 +25,16 @@ dd4hep.toModify(geopro, GeoFromDD4hep = True )
 # load this to do a track refit
 from RecoTracker.TrackProducer.TrackRefitters_cff import *
 from RecoVertex.V0Producer.generalV0Candidates_cff import *
-from TrackPropagation.Geant4e.Geant4ePropagator_cfi import *
+from TrackPropagation.Geant4e.Geant4ePropagatorcvh_cfi import *
 
 G4eFitter = RKTrajectoryFitter.clone ( 
     ComponentName = cms.string('G4eFitter'),
-    Propagator = cms.string('Geant4ePropagator') 
+    Propagator = cms.string('Geant4ePropagatorcvh') 
 )
 
 G4eSmoother = RKTrajectorySmoother.clone (
      ComponentName = cms.string('G4eSmoother'),
-     Propagator = cms.string('Geant4ePropagator'),
+     Propagator = cms.string('Geant4ePropagatorcvh'),
  
      ## modify rescaling to have a more stable fit during the backward propagation
      errorRescaling = cms.double(2.0)
@@ -54,6 +55,6 @@ from RecoTracker.TrackProducer.TrackRefitters_cff import *
 # automatically uses the generalTracks collection as input
 Geant4eTrackRefitter = TrackRefitter.clone()
 Geant4eTrackRefitter.Fitter = cms.string('G4eFitterSmoother')
-Geant4eTrackRefitter.Propagator = cms.string('Geant4ePropagator')
+Geant4eTrackRefitter.Propagator = cms.string('Geant4ePropagatorcvh')
 
 geant4eTrackRefit = cms.Sequence(geopro*Geant4eTrackRefitter)

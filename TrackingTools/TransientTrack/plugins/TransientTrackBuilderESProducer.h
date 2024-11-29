@@ -23,6 +23,7 @@ public:
 private:
   edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magToken_;
   edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> geomToken_;
+  std::string fieldlabel_;
 };
 
 #endif

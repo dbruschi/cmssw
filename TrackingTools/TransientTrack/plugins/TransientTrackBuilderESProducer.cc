@@ -12,7 +12,8 @@ using namespace edm;
 
 TransientTrackBuilderESProducer::TransientTrackBuilderESProducer(const edm::ParameterSet& p) {
   auto cc = setWhatProduced(this, p.getParameter<std::string>("ComponentName"));
-  magToken_ = cc.consumes();
+  fieldlabel_ = p.getParameter<std::string>("MagneticFieldLabel");
+  magToken_ = cc.consumes(edm::ESInputTag("", fieldlabel_));
   geomToken_ = cc.consumes();
 }
 
@@ -25,5 +26,6 @@ void TransientTrackBuilderESProducer::fillDescriptions(edm::ConfigurationDescrip
   desc.add<std::string>("ComponentName", "TransientTrackBuilder")
       ->setComment("data label to use when getting the data product");
 
+  desc.add<std::string>("MagneticFieldLabel", std::string())->setComment("data label to get the magnetic field");
   descriptions.addDefault(desc);
 }

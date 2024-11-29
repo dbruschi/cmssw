@@ -26,6 +26,7 @@ private:
 
   CPE_t cpeNum;
   edm::ParameterSet parametersPSet;
+  std::string fieldlabel;
 
   edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> pDDToken_;
   edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magfieldToken_;
@@ -56,8 +57,9 @@ StripCPEESProducer::StripCPEESProducer(const edm::ParameterSet& p) {
   cpeNum = enumMap[type];
   parametersPSet = (p.exists("parameters") ? p.getParameter<edm::ParameterSet>("parameters") : p);
   auto cc = setWhatProduced(this, name);
+  fieldlabel = p.getParameter<std::string>("MagneticFieldLabel");
   pDDToken_ = cc.consumes();
-  magfieldToken_ = cc.consumes();
+  magfieldToken_ = cc.consumes(edm::ESInputTag("", fieldlabel));
   lorentzAngleToken_ = cc.consumes();
   backPlaneCorrectionToken_ = cc.consumes();
   confObjToken_ = cc.consumes();
