@@ -30,6 +30,9 @@ public:
   FieldStepWatcher(edm::ParameterSet const &p);
   ~FieldStepWatcher() override;
 
+  typedef dqm::legacy::DQMStore DQMStore;
+  typedef dqm::legacy::MonitorElement MonitorElement;
+
 private:
   void update(const BeginOfRun *) override;
   void update(const BeginOfEvent *) override;
