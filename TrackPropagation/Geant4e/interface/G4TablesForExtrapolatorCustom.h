@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: G4TablesForExtrapolatorCustom.hh 74302 2013-10-02 19:33:07Z vnivanch $
-//
 //---------------------------------------------------------------------------
 //
 // ClassName:    G4TablesForExtrapolatorCustom
@@ -52,6 +50,7 @@
 class G4ParticleDefinition;
 class G4ProductionCuts;
 class G4MaterialCutsCouple;
+class G4LossTableBuilder;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
@@ -72,7 +71,7 @@ enum ExtTableType
   fMscElectron
 };
 
-class G4TablesForExtrapolatorCustom 
+class G4TablesForExtrapolatorCustom
 {
 public:
 
@@ -82,11 +81,16 @@ public:
 
   const G4PhysicsTable* GetPhysicsTable(ExtTableType type) const; 
 
-private:
-
   void Initialisation();
 
-  G4PhysicsTable* PrepareTable();
+  // hide assignment operator
+  G4TablesForExtrapolatorCustom & operator=
+  (const G4TablesForExtrapolatorCustom &right) = delete;
+  G4TablesForExtrapolatorCustom(const G4TablesForExtrapolatorCustom&) = delete;
+
+private:
+
+  G4PhysicsTable* PrepareTable(G4PhysicsTable*);
 
   void ComputeElectronDEDX(const G4ParticleDefinition* part, 
 			   G4PhysicsTable* table); 
@@ -100,47 +104,43 @@ private:
   void ComputeTrasportXS(const G4ParticleDefinition* part, 
 			 G4PhysicsTable* table);
 
-  // hide assignment operator
-  G4TablesForExtrapolatorCustom & operator=(const G4TablesForExtrapolatorCustom &right) = delete;
-  G4TablesForExtrapolatorCustom(const G4TablesForExtrapolatorCustom&) = delete;
+  std::vector<const G4MaterialCutsCouple*> couples;
+  G4DataVector cuts;
 
-  const G4ParticleDefinition* currentParticle;
   const G4ParticleDefinition* electron;
   const G4ParticleDefinition* positron;
   const G4ParticleDefinition* muonPlus;
   const G4ParticleDefinition* muonMinus;
   const G4ParticleDefinition* proton;
+  const G4ParticleDefinition* currentParticle = nullptr;
 
-  G4DataVector             cuts;
+  G4LossTableBuilder* builder = nullptr;
+  G4ProductionCuts* pcuts = nullptr;
 
-  G4ProductionCuts*        pcuts;
-  std::vector<const G4MaterialCutsCouple*> couples;
-
-  G4PhysicsTable*          dedxElectron;
-  G4PhysicsTable*          dedxPositron;
-  G4PhysicsTable*          dedxMuon;
-  G4PhysicsTable*          dedxProton;
-  G4PhysicsTable*          rangeElectron;
-  G4PhysicsTable*          rangePositron;
-  G4PhysicsTable*          rangeMuon;
-  G4PhysicsTable*          rangeProton;
-  G4PhysicsTable*          invRangeElectron;
-  G4PhysicsTable*          invRangePositron;
-  G4PhysicsTable*          invRangeMuon;
-  G4PhysicsTable*          invRangeProton;
-  G4PhysicsTable*          mscElectron;
-
-  G4int       verbose;
-  G4int       nbins;
-  G4int       nmat;
+  G4PhysicsTable* dedxElectron = nullptr;
+  G4PhysicsTable* dedxPositron = nullptr;
+  G4PhysicsTable* dedxMuon = nullptr;
+  G4PhysicsTable* dedxProton = nullptr;
+  G4PhysicsTable* rangeElectron = nullptr;
+  G4PhysicsTable* rangePositron = nullptr;
+  G4PhysicsTable* rangeMuon = nullptr;
+  G4PhysicsTable* rangeProton = nullptr;
+  G4PhysicsTable* invRangeElectron = nullptr;
+  G4PhysicsTable* invRangePositron = nullptr;
+  G4PhysicsTable* invRangeMuon = nullptr;
+  G4PhysicsTable* invRangeProton = nullptr;
+  G4PhysicsTable* mscElectron = nullptr;
 
   G4double    emin;
   G4double    emax;
-  G4double    mass;
-  G4double    charge2;
+  G4double    mass = 0.0;
+  G4double    charge2 = 0.0;
 
-  G4bool      splineFlag=false;
+  G4int       verbose;
+  G4int       nbins;
+  G4int       nmat = 0;
 
+  G4bool      splineFlag = false;
   G4bool      ionOnly;
 };
 

@@ -108,7 +108,7 @@
 //
 // constructors and destructor
 //
-ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::ParameterSet &iConfig)
+ResidualGlobalCorrectionMakerBase::ResidualGlobalCorrectionMakerBase(const edm::ParameterSet &iConfig) : clusterInfo_(consumesCollector())
 
 {
   //now do what ever initialization is needed

@@ -34,7 +34,6 @@
 #include "G4RunManagerKernel.hh"
 #include "G4PathFinder.hh"
 #include "G4ErrorPropagationNavigator.hh"
-#include "TrackPropagation/Geant4e/interface/G4UniversalFluctuationForExtrapolator.hh"
 
 // CLHEP
 #include "CLHEP/Units/GlobalSystemOfUnits.h"
@@ -48,6 +47,12 @@
 
 #include "Math/ProbFuncMathCore.h"
 #include "Math/QuantFuncMathCore.h"
+
+#include "G4Electron.hh"
+#include "G4Positron.hh"
+#include "G4Proton.hh"
+#include "G4MuonPlus.hh"
+#include "G4MuonMinus.hh"
 
 
 /** Constructor.
@@ -114,10 +119,6 @@ void Geant4ePropagatorcvh::ensureGeant4eIsInitilized(bool forceInit) const {
   if ((G4ErrorPropagatorData::GetErrorPropagatorData()->GetState() == G4ErrorState_PreInit) || forceInit) {
     LogDebug("Geant4e") << "Initializing G4 propagator" << std::endl;
 
-    //G4UImanager::GetUIpointer()->ApplyCommand("/exerror/setField -10. kilogauss");
-
-//     G4ProductionCutsTable::GetProductionCutsTable()->UpdateCoupleTable(G4RunManagerKernel::GetRunManagerKernel()->GetCurrentWorld());
-
     theG4eManager->SetUserInitialization(new G4ErrorPhysicsListCustom());
     theG4eManager->InitGeant4e();
 
@@ -157,15 +158,10 @@ template <>
 Geant4ePropagatorcvh::ErrorTargetPair Geant4ePropagatorcvh::transformToG4SurfaceTargetD(const GloballyPositioned<double> &pDest,
                                                                                  bool moveTargetToEndOfSurface) const {
   //* Get position and normal (orientation) of the destination plane
-//   Point3DBase<double, GlobalTag> posPlane = pDest.toGlobal<double>(Point3DBase<double, LocalTag>(0, 0, 0));
   Vector3DBase<double, GlobalTag> normalPlane = pDest.toGlobal(Vector3DBase<double, LocalTag>(0, 0, 1.));
                                                                                    
                                                                                    
   Point3DBase<double, GlobalTag> posPlane = pDest.position();
-//   TkRotation<double> rot = pDest.rotation();
-  
-//   Vector3DBase<double, LocalTag> lz(0, 0, 1.);
-//   Vector3DBase<double, GlobalTag> normalPlane = Vector3DBase<double, GlobalTag>(rot.multiplyInverse(lz.basicVector()));
 
   //* Transform this into HepGeom::Point3D<double>  and
   // HepGeom::Normal3D<double>  that define a plane for
@@ -325,11 +321,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
   const G4Field *field = G4TransportationManager::GetTransportationManager()->GetFieldManager()->GetDetectorField();
 //   //FIXME check thread safety of this
-//   sim::Fieldcvh *cmsField = const_cast<sim::Fieldcvh*>(static_cast<const sim::Fieldcvh*>(field));
-//   
-// //   cmsField->SetOffset(0., 0., dBz);
-// //   cmsField->SetMaterialOffset(dxi);
-//   cmsField->SetMaterialOffset(std::log(1e-10));
                                                                                   
   ErrorTargetPair g4eTarget_center = transformToG4SurfaceTarget(pDest, false);
 
@@ -426,7 +417,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
     finalPathLength += thisPathLength;
 
-    // if (std::fabs(finalPathLength) > 10000.0f)
     if (std::fabs(finalPathLength) > 200.0f) {
       LogDebug("Geant4e") << "ERROR: Quitting propagation: path length mega large" << std::endl;
       theG4eManager->GetPropagator()->InvokePostUserTrackingAction(g4eTrajState.GetG4Track());
@@ -513,20 +503,12 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   
   cmsField->SetOffset(0., 0., dBz);
   cmsField->SetMaterialOffset(dxi);
-//   cmsField->SetMaterialOffset(std::log(1e-6));
-//   cmsField->SetMaterialOffset(std::log(1e-10));
   
   auto retDefault = [cmsField]() {
     cmsField->SetOffset(0., 0., 0.);
     cmsField->SetMaterialOffset(0.);
-//     return std::tuple<TrajectoryStateOnSurface, AlgebraicMatrix57, AlgebraicMatrix55, double>();
     return std::tuple<bool, Matrix<double, 7, 1>, Matrix<double, 5, 5>, Matrix<double, 5, 7>, double, Matrix<double, 5, 5>, Matrix<double, 5, 5>, double, double>(false, Matrix<double, 7, 1>::Zero(), Matrix<double, 5, 5>::Zero(), Matrix<double, 5, 7>::Zero(), 0., Matrix<double, 5, 5>::Zero(), Matrix<double, 5, 5>::Zero(), 0., 0.);
   };
-  
-
-
-  
-//   std::cout << "start propagation" << std::endl;
   
   ///////////////////////////////
   // Construct the target surface
@@ -566,42 +548,10 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     g4InitMom = -g4InitMom; 
   }
 
-  
-  
-//   double posarr[4] = { ftsStart[0]*cm, ftsStart[1]*cm, ftsStart[2]*cm, 0. };
-//   double fieldval[10];
-//   field->GetFieldValue(posarr, fieldval);
-//   
-//   std::cout << "cmsInitPos:" << std::endl;
-//   std::cout << cmsInitPos << std::endl;
-//   std::cout << "fieldval " << fieldval[0] << " " << fieldval[1] << " " << fieldval[2] << std::endl;
-  
-//   CLHEP::Hep3Vector g4InitPos = TrackPropagation::globalPointToHep3Vector(cmsInitPos);
-//   CLHEP::Hep3Vector g4InitMom = TrackPropagation::globalVectorToHep3Vector(cmsInitMom * GeV);
-  
-
-
-//   debugReportTrackState("intitial", cmsInitPos, g4InitPos, cmsInitMom, g4InitMom, pDest);
-
-  // Set the mode of propagation according to the propagation direction
-  // G4ErrorMode mode = G4ErrorMode_PropForwards;
-
-  // if (!configurePropagation(mode, pDest, cmsInitPos, cmsInitMom))
-  //	return TsosPP(TrajectoryStateOnSurface(), 0.0f);
-
   ///////////////////////////////
   // Set the error and trajectories, and finally propagate
   //
   G4ErrorTrajErr g4error(5, 0);
-//   if (ftsStart.hasError()) {
-//     CurvilinearTrajectoryError initErr;
-//     initErr = ftsStart.curvilinearError();
-//     g4error = TrackPropagation::algebraicSymMatrix55ToG4ErrorTrajErr(initErr, ftsStart.charge());
-//     LogDebug("Geant4e") << "CMS -  Error matrix: " << std::endl << initErr.matrix();
-//   } else {
-//     LogDebug("Geant4e") << "No error matrix available" << std::endl;
-//     return retDefault();
-//   }
 
   LogDebug("Geant4e") << "G4e -  Error matrix: " << std::endl << g4error;
 
@@ -631,22 +581,10 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   theG4eManager->InitTrackPropagation();
   
   // re-initialize navigator to avoid mismatches and/or segfaults
-//   G4TransportationManager::GetTransportationManager()->GetPropagatorInField()->GetNavigatorForPropagating()->LocateGlobalPointAndSetup(g4InitPos, &g4InitMom);
-//   theG4eManager->GetErrorPropagationNavigator()->LocateGlobalPointAndSetup(g4InitPos, &g4InitMom);
   theG4eManager->GetErrorPropagationNavigator()->LocateGlobalPointAndSetup(g4InitPos, &g4InitMom, false, false);
-//   std::cout << "pathfinder = " << G4PathFinder::GetInstance() << std::endl;
-//   G4PathFinder::GetInstance()->Locate(g4InitPos, g4InitMom, false);
-  
-//   std::cout << "pathfinder nav0 = " << G4PathFinder::GetInstance()->GetNavigator(0) << " prop navigator = " << theG4eManager->GetErrorPropagationNavigator() << std::endl;
   
   // initial jacobian is the identity matrix for the state components,
   // and 0 for b-field and material variations
-//   G4ErrorMatrix jac(5, 7);
-//   for (unsigned int i = 0; i < 5; ++i) {
-//     for (unsigned int j = 0; j < 7; ++j) {
-//       jac(i+1, j+1) = i == j ? 1. : 0.;
-//     }
-//   }
   
   Matrix<double, 5, 7> jac;
   jac.leftCols<5>() = Matrix<double, 5, 5>::Identity();
@@ -654,20 +592,11 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   
   const G4ErrorTrajErr errnull(5, 0);
   
-  
-//   const G4ErrorTrajErr g4errorEnd = g4eTrajState.GetError();
-//   const AlgebraicMatrix55 errstart = ftsStart.curvilinearError().matrix();
   Matrix<double, 5, 5> g4errorEnd = Matrix<double, 5, 5>::Zero();
-  
-//   Matrix<double, 7, 1> ftsEnd = ftsStart;
-
-  
-//   G4ErrorTrajErr dQ(5, 0);
   Matrix<double, 5, 5> dQ = Matrix<double, 5, 5>::Zero();
   Matrix<double, 5, 5> dQ2 = Matrix<double, 5, 5>::Zero();
 
   double dEdxlast = 0.;
-//   double masslast = 0.;
   
   Matrix<double, 5, 5> dErrorDxLast = Matrix<double, 5, 5>::Zero();
   
@@ -679,32 +608,13 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
   bool continuePropagation = true;
   while (continuePropagation) {
-//     if (iterations > 0) {
-//       G4PathFinder::GetInstance()->ReLocate(g4eTrajState.GetPosition());
-//     }
     
     // re-initialize navigator to avoid mismatches and/or segfaults
-    theG4eManager->GetErrorPropagationNavigator()->LocateGlobalPointWithinVolume(g4eTrajState.GetPosition());
-//     G4PathFinder::GetInstance()->ReLocate(g4eTrajState.GetPosition());
-//     const G4ThreeVector momstep = g4eTrajState.GetMomentum();
-//     theG4eManager->GetErrorPropagationNavigator()->LocateGlobalPointAndSetup(g4eTrajState.GetPosition(), &momstep, false, false);
-//     theG4eManager->GetErrorPropagationNavigator()
-//     G4PathFinder::GetInstance()->Locate(g4InitPos, g4InitMom, false);
+    theG4eManager->GetErrorPropagationNavigator()->LocateGlobalPointWithinVolume(g4eTrajState.GetPosition());    
 
-    // brute force re-initialization at every step to be safe
-//     const G4ThreeVector momstep = g4eTrajState.GetMomentum();
-//     theG4eManager->GetErrorPropagationNavigator()->LocateGlobalPointAndSetup(g4eTrajState.GetPosition(), &momstep, false, false);
-    
-    
     iterations++;
     LogDebug("Geant4e") << std::endl << "step count " << iterations << " step length " << finalPathLength;
 
-//     const GlobalPoint pos = TrackPropagation::hepPoint3DToGlobalPoint(g4eTrajState.GetPosition());
-//     const GlobalVector mom = TrackPropagation::hep3VectorToGlobalVector(g4eTrajState.GetMomentum() / GeV);
-//     constexpr double mass = 0.1056583745;
-    
-//     const FreeTrajectoryState statepre(pos, mom, ftsStart.charge(), &ftsStart.parameters().magneticField());
-    
     Matrix<double, 7, 1> statepre;
     statepre[0] = g4eTrajState.GetPosition().x()/cm;
     statepre[1] = g4eTrajState.GetPosition().y()/cm;
@@ -733,69 +643,9 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
     if (std::abs(thisPathLength) > 0.) {
       dEdxlast = dEdx;
-//       masslast = mass;
     }
-    
-//     std::cout << "thisPathLength = " << thisPathLength << std::endl;
-//     const Matrix<double, 5, 7> transportJac = transportJacobian(statepre, thisPathLength, dEdx, mass);
-    const Matrix<double, 5, 7> transportJac = transportJacobianBzD(statepre, thisPathLength, dEdx, mass, dBz);
-    
-//     const Matrix<double, 5, 7> transportJacAlt = transportJacobianD(statepre, thisPathLength, dEdx, mass);
-    
-//     const double dh = 1e-4;
-    
-//     const Matrix<double, 6, 1> dest = transportResultD(statepre, thisPathLength, dEdx, mass, 0.);
-//     const Matrix<double, 6, 1> destalt = transportResultD(statepre, thisPathLength, dEdx, mass, dh);
-    
-//     const Matrix<double, 6, 1> ddest = (destalt-dest)/dh;
-//     
-//     Matrix<double, 7, 1> statepost;
-//     statepost[0] = g4eTrajState.GetPosition().x()/cm;
-//     statepost[1] = g4eTrajState.GetPosition().y()/cm;
-//     statepost[2] = g4eTrajState.GetPosition().z()/cm;
-//     statepost[3] = g4eTrajState.GetMomentum().x()/GeV;
-//     statepost[4] = g4eTrajState.GetMomentum().y()/GeV;
-//     statepost[5] = g4eTrajState.GetMomentum().z()/GeV;
-//     statepost[6] = charge;
-//     
-//     const Matrix<double, 3, 1> Wpost = statepost.segment<3>(3).normalized();
-//     const Matrix<double, 3, 1> khat(0., 0., 1.);
-//     
-//     const Matrix<double, 3, 1> Upost = khat.cross(Wpost).normalized();
-// //     const Matrix<double, 3, 1> Upost = Upostpre.normalized();
-//     
-//     const double ddxt = ddest.head<3>().dot(Upost);
-    
-//     std::cout <<
-    
-    
-    
-//     const Matrix<double, 5, 7> transportJac = transportJacobianBzAdvanced(statepre, thisPathLength, dEdx, mass);
-    
-//     const Matrix<double, 5, 7> transportJacAlt = transportJacobianBz(statepre, thisPathLength, dEdx, mass);
 
-//     std::cout << "transportJac" << std::endl;
-//     std::cout << transportJac << std::endl;
-// //     std::cout << "transportJacAlt" << std::endl;
-// //     std::cout << transportJacAlt << std::endl;
-//     std::cout << "ddest numerical" << std::endl;
-//     std::cout << ddest.transpose() << std::endl;
-//     std::cout << "ddxt jac = " << transportJac(3, 5) << " ddxt numerical = " << ddxt << std::endl;
-    
-//     bool isnan = false;
-//     for (unsigned int i=0; i<transportJac.rows(); ++i) {
-//       for (unsigned int j=0; j<transportJac.cols(); ++j) {
-//         if (std::isnan(transportJac(i, j))) {
-//           isnan = true;
-//         }
-//       }
-//     }
-//     
-//     if (isnan) {
-//       std::cout << "thisPathLength = " << thisPathLength << " ePre = " << ePre << " ePost = " << ePost << " dEdx = " << dEdx << " mass = " << mass << std::endl;
-//       std::cout << "transportJac" << std::endl;
-//       std::cout << transportJac << std::endl;
-//     }
+    const Matrix<double, 5, 7> transportJac = transportJacobianBzD(statepre, thisPathLength, dEdx, mass, dBz);
     
     // transport contribution to error
     g4errorEnd = (transportJac.leftCols<5>()*g4errorEnd*transportJac.leftCols<5>().transpose()).eval();
@@ -803,44 +653,10 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     dQ = (transportJac.leftCols<5>()*dQ*transportJac.leftCols<5>().transpose()).eval();
     dQ2 = (transportJac.leftCols<5>()*dQ2*transportJac.leftCols<5>().transpose()).eval();
     
-//     const G4ErrorMatrix &transferMatrix = g4eTrajState.GetTransfMat();
-    
-    // transport contribution to error
-//     g4errorEnd = g4errorEnd.similarity(transferMatrix).T();
-//     dQ = dQ.similarity(transferMatrix).T();
-    
-    // MS and ionization contributions to error
-    
-//     G4ErrorTrajErr errMSI = g4eTrajState.GetError();
-//     
-//     // recompute ionization contribution (without truncation for the moment)
-//     errMSI(0+1, 0+1) = computeErrorIoni(g4eTrajState.GetG4Track());
-//     
-//     Matrix<double, 5, 5> errMSIout = Matrix<double, 5, 5>::Zero();
-//     
-// //     std::cout << "errMSI" << std::endl;
-// //     std::cout << errMSI << std::endl;
-//     
-//     for (unsigned int i = 0; i < 5; i++) {
-//       for (unsigned int j = 0; j < 5; j++) {
-//         double w = 1.;
-//         if (i==0) {
-//           w *= charge;
-//         }
-//         if (j==0) {
-//           w *= charge;
-//         }
-//         errMSIout(i, j) += w*errMSI(i+1, j+1);
-//       }
-//     }
-    
     Matrix<double, 5, 5> errMSIout = PropagateErrorMSC(g4eTrajState.GetG4Track(), pforced);
-    
-    // std::cout << "dxi = " << dxi << " drad = " << drad << std::endl;
 
     // scaling only affects MS
     const double msfact = std::exp(dms);
-    // std::cout << "dms = " << dms << " msfact = " << msfact << std::endl;
     
     errMSIout *= msfact;
 
@@ -848,24 +664,12 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     const double X0 = mate->GetRadlen() / cm;
     RItotal += msfact*thisPathLength/X0;
 
-    // DDtotal += errMSIout(1, 1);
-
-//     std::cout << "radfact = " << radfact << std::endl;
-
-//     errMSIout *= radfact;
-
     if (false) {
-      // XItotal += computeXi(g4eTrajState.GetG4Track());
       const std::pair<double, double> landau = computeLandau(g4eTrajState.GetG4Track());
-
-      // G4double dedxsqurban = 1e-6*fluct->SampleFluctuations(mate, aTrack->GetDynamicParticle(), Emaxmev, stepLengthmm, ekinmev);
-
-      // std::cout << "material = " << mate->GetName() << " thisPathLength = " << thisPathLength << " dEdx = " << dEdx << " dEdx*thisPathLength = " << dEdx*thisPathLength <<  " delta = " << landau.first << " w = " << landau.second << std::endl;
 
       deltaTotal += landau.first;
       wTotal += landau.second;
       
-      // const double kd = ROOT::Math::landau_pdf(ROOT::Math::landau_quantile(0.5))
       constexpr double kd = 0.13017714;
       const double c = landau.second;
 
@@ -873,11 +677,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
       constexpr double alphalandau = 0.996;
       const double varE = ascale*ascale*ROOT::Math::landau_xm2(ROOT::Math::landau_quantile(alphalandau));
-
-
-      // const double varE = 2.*c*c/M_PI/M_PI/M_PI/kd/kd;
-
-      // Etot  = aTrack->GetTotalEnergy() / GeV;
 
       const double pPre6 = std::pow(pPre, 6);
       // Apply it to error
@@ -887,22 +686,10 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
     
     const double ionifact = std::exp(dioni);
-    
-    // std::cout << "dioni = " << dioni << " ionifact = " << ionifact << std::endl;
 
-    
-//     errMSIout(0, 0) = varqop;
-    errMSIout(0, 0) = ionifact*computeErrorIoni(g4eTrajState.GetG4Track(), pforced);
-    
-    // std::cout << "ionifact = " << ionifact << " errMSIout(0, 0) = " << errMSIout(0, 0) << std::endl;
-      
+    errMSIout(0, 0) = ionifact*computeErrorIoni(g4eTrajState.GetG4Track(), pforced);      
 
     // separate scaling for ionization and MS
-//     const double xifact = std::exp(dxi);
-//     const double radfact = std::exp(drad);
-
-//     errMSIout(0, 0) *= radfact;
-//     errMSIout.bottomRightCorner<4, 4>() *= xifact;
     
     g4errorEnd += errMSIout;
     
@@ -914,77 +701,11 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     }
     
     // transport  + nominal energy loss contribution to jacobian
-//     jac = transferMatrix*jac;
     jac = (transportJac.leftCols<5>()*jac).eval();
 
     //TODO assess relevance of approximations (does the order matter? position/momentum before or after step?)
     //b-field and material contributions to jacobian
-    jac.rightCols<2>() += transportJac.rightCols<2>();
-        
-    
-//     const double betaPre = pPre/ePre;    
-//     G4ErrorTrajErr errMS = errMSI;
-//     errMS(0+1, 0+1) = 0.;
-// //     std::cout << "ppre = " << pPre << " betaPre = " << betaPre << " mass = " << mass << " ePre  = " << ePre << std::endl;
-// //     G4ErrorTrajErr dQpre = 2.*pPre*(betaPre*betaPre + 2.*mass*mass/ePre/ePre)*errMS;
-//     G4ErrorTrajErr dQpre = (2.*pPre + 4.*mass*mass/pPre)*betaPre*betaPre*errMS;
-//     
-//     for (unsigned int i = 0; i < 5; i++) {
-//       for (unsigned int j = 0; j < 5; j++) {
-//         double w = charge;
-//         if (i==0) {
-//           w *= charge;
-//         }
-//         if (j==0) {
-//           w *= charge;
-//         }
-//         w *= jac(0,0);
-//         dQ(i, j) += w*dQpre(i+1, j+1);
-//       }
-//     }
-    
-//     Matrix<double, 5, 5> errMS = errMSIout;
-//     errMS(0,0) = 0.;
-    
-//     Matrix<double, 5, 5> errIoni = Matrix<double, 5, 5>::Zero();
-//     errIoni(0,0) = errMSIout(0,0);
-//     
-//     const double q = charge;
-//     const double qop = charge/pPre;
-//     const double eMass = 510.99906e-6;
-//                                             
-//     const double x0 = std::pow(q, 2);
-//     const double x1 = std::pow(mass, 2)*std::pow(qop, 2);
-//     const double x2 = 1./(qop*(x0 + x1));
-//     const Matrix<double, 5, 5> dQms = 2.*errMS*x2*(x0 + 2.*x1);
-//     const Matrix<double, 5, 5> dQion = errIoni*x2*(4.0*x0 + 10.0*x1);
-
-
-
-//     std::cout << "dQionNorm" << std::endl;
-//     std::cout << dQion/errIoni(0,0) << std::endl;
-
-    
-//      const double dQmsNorm = 2*x0*(x1 + 2*x4)/(x1 + x4);
-//      std::cout << "dQmsNorm = " << dQmsNorm << std::endl;
-
-//     std::cout << "errMSIout" << std::endl;
-//     std::cout << errMSIout << std::endl;
-//     
-//     std::cout << "dQms" << std::endl;
-//     std::cout << dQms << std::endl;
-//     
-//     std::cout << "dQion" << std::endl;
-//     std::cout << dQion << std::endl;
-    
-    
-
-
-
-    
-//     dQ += 0.*jac(0,0)*dQion;
-//     dQ += jac(0,0)*dQms;
-    
+    jac.rightCols<2>() += transportJac.rightCols<2>();    
     
     Matrix<double, 5, 5> errMS = errMSIout;
     errMS(0,0) = 0.;
@@ -994,17 +715,12 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     
     dQ += errMS;
     dQ2 += errI;
-    
-    
-    
-    
-    
+
     LogDebug("Geant4e") << "step Length was " << thisPathLength << " cm, current global position: "
                         << TrackPropagation::hepPoint3DToGlobalPoint(g4eTrajState.GetPosition()) << std::endl;
 
     finalPathLength += thisPathLength;
 
-    // if (std::fabs(finalPathLength) > 10000.0f)
     if (std::fabs(finalPathLength) > 200.0f) {
       LogDebug("Geant4e") << "ERROR: Quitting propagation: path length mega large" << std::endl;
       theG4eManager->GetPropagator()->InvokePostUserTrackingAction(g4eTrajState.GetG4Track());
@@ -1028,53 +744,15 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
   const double varE = 2.*c*c/M_PI/M_PI/M_PI/kd/kd;
 
-  // Etot  = aTrack->GetTotalEnergy() / GeV;
-
   const double eFinal = g4eTrajState.GetG4Track()->GetTotalEnergy() / GeV;
   const double pFinal = g4eTrajState.GetMomentum().mag() / GeV;
   const double p6 = std::pow(pFinal, 6);
   // Apply it to error
   const double varqop = eFinal * eFinal * varE / p6;
-
-  // const double varqopratio = std::sqrt(varqop)*pFinal;
-  // const double varqopratio = std::sqrt(g4errorEnd(0, 0))*pFinal;
-  // std::cout << "varqopratio = " << varqopratio << std::endl;
-
-  // std::cout << "g4errorEnd before:\n" << g4errorEnd << std::endl;
-
-  // const double qopscale = std::sqrt(varqop/g4errorEnd(0, 0));
-  // g4errorEnd.row(0) *= qopscale;
-  // g4errorEnd.col(0) *= qopscale;
-
-  // const double varqopdummyfact = 1e-7;
-  // const double varqopdummy = 1e-7*1e-7/pFinal/pFinal;
-  // g4errorEnd(0, 0) += varqopdummy;
-  // g4errorEnd.row(0) *= 0.;
-  // g4errorEnd.col(0) *= 0.;
-  // g4errorEnd(0, 0) = varqopdummy;
-
-  // std::cout << "g4errorEnd after:\n" << g4errorEnd << std::endl;
-
-  // std::cout << "qopscale = " << qopscale << std::endl;
-
-// std::cout << "g4errorEnd(0, 0) = " << g4errorEnd(0, 0) << " varqop = " << varqop << std::endl;
-
-  // adjust multiple scattering for core width
-    // G4double DDold = 1.8496E-4*RI*(charge/pBeta * charge/pBeta );
-      // G4double DDcore = 0.0136*0.0136*RI*(charge/pBeta * charge/pBeta )*std::pow(1. + 0.038*std::log(RI), 2);
-  // g4errorEnd *= std::pow(1. + 0.038*std::log(RItotal), 2);
-
-
-//   std::cout << "propgationDirection = " << propagationDirection() << " finalPathLength = " << finalPathLength << std::endl;
-//   if (finalPathLength < 0.) {
-//     throw std::runtime_error("negative path length!");
-//   }
   
   // CMSSW Tracking convention, backward propagations have negative path length
   if (propagationDirection() == oppositeToMomentum)
     finalPathLength = -finalPathLength;
-
-//   std::cout << "finalPathLength = " << finalPathLength << std::endl;
   
   // store the correct location for the hit on the RECO surface
   LogDebug("Geant4e") << "Position on the RECO surface" << g4eTrajState.GetPosition() << std::endl;
@@ -1103,8 +781,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   cmsField->SetMaterialOffset(0.);
   
   return std::tuple<bool, Matrix<double, 7, 1>, Matrix<double, 5, 5>, Matrix<double, 5, 7>, double, Matrix<double, 5, 5>, Matrix<double, 5, 5>, double, double>(true, ftsEnd, g4errorEnd, jac, dEdxlast, dQ, dQ2, deltaTotal, wTotal);
-  
-//   return std::tuple<TrajectoryStateOnSurface, AlgebraicMatrix57, AlgebraicMatrix55, double>(TrajectoryStateOnSurface(localparms, localerr, pDest, theField, side), jacfinal, dQfinal, dEdxlast);
 }
 
 //
@@ -1184,8 +860,6 @@ void Geant4ePropagatorcvh::debugReportTrackState(std::string const &currentConte
 Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Track* aTrack, double pforced) const
 { 
   G4ThreeVector vpPre = aTrack->GetMomentum()/GeV;
-//   G4double pPre = vpPre.mag();
-//   G4double pBeta = pPre*pPre / (aTrack->GetTotalEnergy()/GeV);
   G4double mass  = aTrack->GetDynamicParticle()->GetMass() / GeV;
   G4double pPre = pforced > 0. ? pforced : aTrack->GetMomentum().mag() / GeV;
   G4double Etot = sqrt(pPre*pPre + mass*mass);
@@ -1200,7 +874,6 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
 
 #ifdef G4EVERBOSE
   if( iverbose >= 4 ) G4cout << "material " << mate->GetName() 
-                     //<< " " << mate->GetZ() << " "  << mate->GetA() 
                         << " effZ:" << effZ << " effA:" << effA
                         << " dens(g/mole):"  << mate->GetDensity()/g*mole << " Radlen/cm:" << mate->GetRadlen()/cm << " nuclLen/cm" << mate->GetNuclearInterLength()/cm << G4endl;
 #endif
@@ -1214,45 +887,15 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
   G4double X0 = mate->GetRadlen()/cm;
   G4double Xs = X0*(effZ + 1.)*std::log(287./std::sqrt(effZ))/std::log(159.*std::pow(effZ, -1./3.))/effZ;
 
-//   std::cout << "name = " << mate->GetName() << " X0 = " << X0 << std::endl;
-  
-//   msmodel->SetCurrentCouple(aTrack->GetMaterialCutsCouple());
-//   const double lambdaeff = msmodel->GetTransportMeanFreePath(aTrack->GetParticleDefinition(), pPre) / cm;
-
-//   const double lnb = -2.*lambdaeff/stepLengthCm;
-//   const double b = std::exp(lnb);
-//   const double expzr = b - b*lnb - 1.;
-//   const double expzr2 = 2. - b*lnb*lnb + 2.*b*lnb - 2.*b;
-//
-//   const double varzr = expzr2 - expzr;
-
-//   const double varz = 1. - b*lnb*lnb - b*b - b*b*lnb*lnb + b*b*lnb;
-//   const double DDlam = 0.5*stepLengthCm*stepLengthCm/lambdaeff/lambdaeff*varzr;
-
-
-
-//   const double Nsnorm = 1.587e7/beta/beta*std::pow(effZ, -2./3.)/std::log(159.*std::pow(effZ, -1./3.))/Xs;
-//   const double Nsnorminv = 1./Nsnorm;
-
-//   const double teff = stepLengthCm/lambdaeff;
-
-//   const double Dwentzel = 2.0/stepLengthCm/lambdaeff;
-//   const double DDwentzel = Dwentzel*Dwentzel;
-
-//   const double lambdaeffscaled = lambdaeff/pBeta/pBeta*charge*charge;
-//   std::cout << "lambdaeff = " << lambdaeff << std::endl;
-
-
   if (false) {
     msmodel->DefineMaterial(aTrack->GetMaterialCutsCouple());
 
 
     double pathlenghtmp = aTrack->GetStep()->GetStepLength();
     msmodel->ComputeTruePathLengthLimit(*aTrack, pathlenghtmp);
-  //
+
     const double truesteplength = msmodel->ComputeTrueStepLength(aTrack->GetStep()->GetStepLength())/cm;
-  //   std::cout << "stepLengthCm = " << stepLengthCm << " truesteplength = " << truesteplength << std::endl;
-  //
+
     const G4ThreeVector testdir(1., 0., 0.);
 
     const int nsample = 1000*1000;
@@ -1267,12 +910,9 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
     }
     const double phivar = sumdphi2/sumw;
 
-  //   const double DDlam = msmodel->ProjectedVariance();
     const double DDlam = phivar;
     const double DDlamscaled = DDlam/stepLengthCm;
     const double DDlamscaled2 = DDlam/stepLengthCm*pBeta*pBeta;
-
-  //   std::cout << "lambdaeff = " << lambdaeff << " stepLengthCm = " << stepLengthCm << " lnb = " << lnb << " b = " << b << " expzr = " << expzr << " expzr2 = " << expzr2 << " varzr = " << varzr << " DDlam = " << DDlam << std::endl;
 
   }
 
@@ -1287,7 +927,6 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
     {
       const double iZ = mate->GetElement(ii)->GetZ();
       const double iA = mate->GetElement(ii)->GetA() / g * mole;
-  //     const double iDensity = fracVec[ii]*mate->GetDensity() / mg * mole;
       const double iX0 = 716.4*iA/iZ/(iZ+1.)/std::log(287./std::sqrt(iZ));
       const double iXs = iX0*(iZ + 1.)*std::log(287./std::sqrt(iZ))/std::log(159.*std::pow(iZ, -1./3.))/iZ;
       
@@ -1301,18 +940,11 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
 
     const double X0alt = 1./invX0alt/density;
     const double Xsalt = 1./invXsalt/density;
-    
-//     std::cout << "name = " << mate->GetName() << " nelems = " << mate->GetNumberOfElements() << " effZ = " << effZ <<  " sumw = " << sumw << " X0alt/X0 = " << X0alt/X0 << " Xsalt/Xs = " << Xsalt/Xs << " Xs/X0 = " << Xs/X0 << " X0 = " << X0 << " stepLengthCm = " << stepLengthCm << " DDlamscaled = " << DDlamscaled << " DDlamscaled2 = " << DDlamscaled2 << std::endl;
   }
   
   
   G4double DD = 2.25e-4*stepLengthCm*(charge/pBeta * charge/pBeta )/Xs;
 
-  // if (X0 > 25e3) {
-  //   // std::cout << "low density material: " << mate->GetName() << " scaling down\n";
-  //   DD *= 1e-4;
-  // }
-  
   if (false) {
     //TODO check charge^2 dependence?
     
@@ -1327,18 +959,11 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
     
     const double Q = 41e3*std::pow(effZ, -2./3.);
     const double b = Q/std::sqrt(nbar*(std::log(Q) - 0.5));
-    // const double b = Q*a;
     
     const double epsilon = std::max(0., (1. - var0)/(a*a*(std::log(b/a) - 0.5) - var0));
     
-    // const double alpha = 0.996;
     const double alpha = 0.9995;
-    // const double alpha = 1.0;
-    // const double alpha = 0.95;
-    
-    // const double alphap = (alpha - (1.-epsilon))/epsilon;
     const double alphap = alpha;
-    // const double alphap = std::clamp( (alpha - (1.-epsilon))/epsilon, 0., 1.);
     
     const double k = b*b/(a*a + b*b);
     
@@ -1348,22 +973,10 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
 
     const double DDalpha = DD*varalpha;
     const double DDone = DD*varone;
-    
-    // std::cout << "mat = " << mate->GetName() << " stepLengthCm = " << stepLengthCm << " DD = " << DD << " epsilon = " << epsilon << " alphap = " << alphap << " var0 = " << var0 << " varalpha = " << varalpha << " varone = " << varone << " DDalpha/DD = " << DDalpha/DD << " DDone/DD = " << DDone/DD << std::endl;
-    
-    // DD = DDold;
-    // DD = DDalpha;
+
     DD = varT*varalpha;
 
   }
-  // G4double DDX0 = 1.44e-4*RI*(charge/pBeta * charge/pBeta );
-  // DD = DDX0;
-
-  // DD *= 0.715;
-  
-  // DD *= 0.8;
-  
-  // DD *= 0.72*0.95;
   
   if (false) {
 
@@ -1374,78 +987,14 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
     const double k = 2.*tmin*tmin*(1. + tmin*tmin/tmax/tmax);
     const double nbar = 1.587e7*stepLengthCm*std::pow(effZ, -2./3.)/std::log(159.*std::pow(effZ, -1./3.))/Xs/beta/beta;
     
-  //   const double alpha = 0.996;
-  //   const double alpha = 0.9999;
-    // const double alpha = 1. - 1e-7;
     const double alpha = 1.0;
     const double talpha = std::sqrt(2.*alpha/(k - 2.*tmin*tmin*alpha))*tmin*tmin;
     
-    // const double tbar = 0.5*k*(std::atan(talpha/tmin)/tmin - talpha/(tmin*tmin + talpha*talpha));
     const double tsqbar = k*(0.5*tmin*tmin/(talpha*talpha + tmin*tmin) - std::log(tmin) + 0.5*std::log(talpha*talpha + tmin*tmin) - 0.5);
     
-    // const double sigtsq = tsqbar - tbar*tbar;
-    
-    const double DDalpha = 0.5*nbar*tsqbar;
-    // const double DDalpha = 0.5*nbar*sigtsq;
-    
-  //   const double tbarone = 4.18e-6*std::pow(effZ, 1./3.)/pPre;
-  //   const double tsqbarone = 2.84e-11*std::pow(effZ, 2./3.)*std::log(159.*std::pow(effZ, -1./3.))/pPre/pPre;
-  //   
-  //   const double tbaronealt = 0.5*M_PI*tmin;
-  //   const double tsqbaronealt = 2.*tmin*tmin*(std::log(tmax/tmin) - 0.5);
-  //   
-  // //   DD = 0.5*sigtsq;
-  //   
-  //   std::cout << "tmin = " << tmin << " tmax = " << tmax << " talpha = " << talpha << std::endl;
-  //   
-  //   std::cout << "tbar = " << tbar << " tsqbar = " << tsqbar << " tbarone = " << tbarone << " tsqbarone = " << tsqbarone << " tbaronealt = " << tbaronealt << " tsqbaronealt = " << tsqbaronealt << std::endl;
-  //   
-  //   std::cout << "DD = " << DD << " DDalpha = " << DDalpha << std::endl;
-    // DD = DDalpha;
-
-    
-    
-    // if (std::fabs(effZ - 4.0) < 0.1) {
-      // zero MS for beryllium!?
-      // DD = 0.;
-    // }
-    
-    // const double rhopost = aTrack->GetStep()->GetPostStepPoint()->GetPosition().rho()/cm;
-    // if (rhopost < 4.5) {
-    //   std::cout << "material = " << mate->GetName() << " rhopost = " << rhopost << " zeroing material\n";
-    //   DD = 0.;
-    // }
-    
-  //   G4double DD = X0 < 25e3 ? 2.25e-4*stepLengthCm*(charge/pBeta * charge/pBeta )/Xs : 0.;
-
-  // //   G4double DD = 2.25e-4*RI*(charge/pBeta * charge/pBeta );
-
-  //   std::cout << "name = " << mate->GetName() << " X0 = " << X0 << " lambdaeff = " << lambdaeff << " Nsnorminv = " << Nsnorminv << " lambdaeff/Nsnorminv = " << lambdaeff/Nsnorminv << " lambdaeff/Xs = " << lambdaeff/Xs << " p = " << pPre << " beta = " << beta << std::endl;
-
-  //   const double DDlam = stepLengthCm/lambdaeff/lambdaeff;
-
-  //   std::cout << "name = " << mate->GetName() << " X0 = " << X0 << " Xs = " << Xs << " DD = " << DD << " DDold = " << DDold << " DDlam = " << DDlam << " DDlam/DD = " << DDlam/DD << " DDlam/DDold = " << DDlam/DDold << " stepLengthCm = " << stepLengthCm << " pPre = " << pPre << " DDlamscaled = " << DDlamscaled << " DDlamscaled2 = " << DDlamscaled2 << std::endl;
-
-  //   std::cout << "name = " << mate->GetName() << " X0 = " << X0 << " Xs = " << Xs << " lambdaeff = " << lambdaeff << " lambdaeff/X0 = " << lambdaeff/X0 << " lambdaeff/Xs = " << lambdaeff/Xs << " DD = " << DD << " phivar = " << phivar << " phivar/DD = " << phivar/DD << " phivar/DDold = " << phivar/DDold << " stepLengthCm = " << stepLengthCm << " pPre = " << pPre << std::endl;
-
-
-    // G4double DDcore = 0.0136*0.0136*RI*(charge/pBeta * charge/pBeta )*std::pow(1. + 0.038*std::log(RI), 2);
-    // DD = DDcore;
-  // //   G4double DDcorealt = 0.0136*0.0136*RI*(charge/pBeta * charge/pBeta )*std::pow(1. + 0.038*std::log(RI/beta/beta), 2);
-  //
-  //   const double dp = stepLengthCm/Xs/beta/beta;
-  //   const double lndp = std::log(dp);
-  //   const double var1 = 0.8510 + 0.03314*lndp - 0.001825*lndp*lndp;
-  //   const double DDcorealt = 2.25e-4*dp*var1/pPre/pPre;
-    
-  //   std::cout << "name = " << mate->GetName() << " mate->GetDensity() = " << mate->GetDensity() <<  " X0 = " << X0 << " Xs = " << Xs << " stepLengthCm = " << stepLengthCm << " var1 = " << var1 << " DDcorealt/DDcore = " << DDcorealt/DDcore << std::endl;
-  
+    const double DDalpha = 0.5*nbar*tsqbar;  
   }
-  
-//   DD = DDold;
-  // DD = DDcore;
-//   std::cout << "DD/DDcore = " << DD/DDcore << std::endl;
-//   std::cout << "DDold = " << DDold << " DD = " << DD << std::endl;
+
 #ifdef G4EVERBOSE
   if( iverbose >= 3 ) G4cout << "G4EP:MSC: D*1E6= " << DD*1.E6 <<" pBeta " << pBeta << G4endl;
 #endif
@@ -1491,9 +1040,6 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
   G4double effZ, effA;
   CalculateEffectiveZandA(mate, effZ, effA);
 
-//   G4double Etot  = aTrack->GetTotalEnergy() / GeV;
-//   G4double beta  = aTrack->GetMomentum().mag() / GeV / Etot;
-
   G4double mass  = aTrack->GetDynamicParticle()->GetMass() / GeV;
   G4double pPre = aTrack->GetMomentum().mag() / GeV;
   G4double Etot = sqrt(pPre*pPre + mass*mass);
@@ -1525,8 +1071,6 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
   const double delta = 2.*std::log(hbarwp/I) + 2.*std::log(beta*gamma) - 1.;
   const double m = mass*1e3;
 
-  // std::cout << "I = " << I << std::endl;
-
   if (false) {
 
     const double deltap = xi*(std::log(2.*m*beta*beta*gamma*gamma/I) + std::log(xi/I) + 0.2 - beta*beta - delta)*1e-3;
@@ -1537,14 +1081,10 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
     constexpr double k = -0.22278;
 
     const double c = 0.125*M_PI*fwhm;
-    // const double c = 0.5*fwhm;
     const double ascale = 0.25*fwhm;
     const double mshift = deltap - ascale*k;
 
     const double mu = mshift - ascale*std::log(ascale);
-
-    // std::cout << "deltap = " << deltap << " c = " << c << std::endl;
-
 
     return std::make_pair(mu, c);
 
@@ -1554,7 +1094,6 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
   const double ePostmev = aTrack->GetStep()->GetPostStepPoint()->GetTotalEnergy();
   const double elossmev = ePremev - ePostmev;
 
-//   const unsigned int nsamples = 100;
   const unsigned int nsamples = 1;
 
   std::vector<double> elossv;
@@ -1579,21 +1118,10 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
   const double deltap = mode;
   const double c = std::max(0., 0.5*M_PI*(med-mode)/(km-k));
 
-  // const double deltap = xi*(std::log(2.*m*beta*beta*gamma*gamma/I) + std::log(xi/I) + 0.2 - beta*beta - delta)*1e-3;
-  // const double fwhm = 4.*xi*1e-3;
-  // const double c = 0.125*M_PI*fwhm;
-
-
-
   const double ascale = 2.*c/M_PI;
   const double mshift = deltap - ascale*k;
 
   const double mu = c > 0. ? mshift - ascale*std::log(ascale) : deltap;
-
-  // std::cout << "deltap = " << deltap << " deltapalt = " << deltapalt << " c = " << c << " calt = " << calt << std::endl;
-
-  // std::cout << "deltap = " << deltap << " c = " << c << std::endl;
-
 
   return std::make_pair(mu, c);
 
@@ -1615,9 +1143,6 @@ double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pfor
   G4Material* mate = aTrack->GetVolume()->GetLogicalVolume()->GetMaterial();
   G4double effZ, effA;
   CalculateEffectiveZandA(mate, effZ, effA);
-
-//   G4double Etot  = aTrack->GetTotalEnergy() / GeV;
-//   G4double beta  = aTrack->GetMomentum().mag() / GeV / Etot;
   
   G4double mass  = aTrack->GetDynamicParticle()->GetMass() / GeV;
   G4double pPre = pforced > 0. ? pforced : aTrack->GetMomentum().mag() / GeV;
@@ -1648,10 +1173,6 @@ double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pfor
   G4double F2        = 1. + 2. * massRatio * gamma + massRatio * massRatio;
   G4double Emax      = 1.E+6 * F1 / F2;  // now in keV
 
-//   std::cout << "eMass = " << eMass << " mass = " << mass << std::endl;
-  //  * *** and now sigma**2  in GeV
-//   G4double dedxSq =
-//     XI * Emax * (1. - (beta * beta / 2.)) * 1.E-12;  // now in GeV^2
   /*The above  formula for var(1/p) good for dens scatterers. However, for MIPS
     passing through a gas it leads to overestimation. Further more for incident
     electrons the Emax is almost equal to incident energy. This leads  to
@@ -1660,24 +1181,6 @@ double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pfor
     Since I do not have enough info at the moment to implement Landau &
     sub-Landau models for k=Xi/Emax <0.01 I'll saturate k at this value for now
   */
-  
-
-//   const double ePre = aTrack->GetStep()->GetPreStepPoint()->GetTotalEnergy() / GeV;
-//   const double ePost = aTrack->GetStep()->GetPostStepPoint()->GetTotalEnergy() / GeV;
-//   const double dEdxactual = -(ePost - ePre)/stepLengthCm;
-//   
-// //   const double poti = 16.e-9 * 10.75;                 // = 16 eV * Z**0.9, for Si Z=14
-// //   const double eplasma = 28.816e-9 * sqrt(2.33 * 0.498);  // 28.816 eV * sqrt(rho*(Z/A)) for Si
-//   const double poti = 16.e-9 * pow(effZ, 0.9);                // = 16 eV * Z**0.9, for Si Z=14
-//   const double density = mate->GetDensity() / mg * mole;
-//   const double eplasma = 28.816e-9 * sqrt(density*effZ/effA);  // 28.816 eV * sqrt(rho*(Z/A)) for Si
-// //   const double delta0 = 2 * log(eplasma / poti) - 1.;
-//   const double delta0 = 2 * log(eplasma / poti) - 1. + 2.*log(beta*gamma);
-//   const double beta2 = beta*beta;
-// //   const double dEdx = XI*1e-6 * (log(2. * eMass * Emax*1e-6 / (poti * poti)) - 2. * (beta2)-delta0)/stepLengthCm;
-//   const double dEdx = XI*1e-6 * (log(2. * eMass * Emax*1e-6*beta2*gamma*gamma / (poti * poti)) - 2. * (beta2)-delta0)/stepLengthCm;
-// 
-//   std::cout << "material = " << mate->GetName() <<" ePre = " << ePre << " dEdx simple = " << dEdx << " dEdx actual = " << dEdxactual << " actual/simple = " << dEdxactual/dEdx << std::endl;
   
 //   dedxSq *= 0.;
   
@@ -1770,43 +1273,9 @@ double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pfor
   const double ePre = aTrack->GetStep()->GetPreStepPoint()->GetKineticEnergy() / GeV;
   const double ePost = aTrack->GetStep()->GetPostStepPoint()->GetKineticEnergy() / GeV;
   G4double eav = (ePre-ePost)*1e3;
-//   G4double epremev = ePre*1e3;
   G4double ekinmev = 0.5*(ePre + ePost)*1e3;
 
-//   std::cout << "eav = " << eav << std::endl;
-
   G4double dedxsqurban = 1e-6*fluct->SampleFluctuations(mate, aTrack->GetDynamicParticle(), Emaxmev, stepLengthmm, ekinmev);
-//   G4double dispurban = fluct->Dispersion(mate, aTrack->GetDynamicParticle(), Emaxmev, stepLengthmm);
-//   G4double dispurbansq = 1e-6*dispurban*dispurban;
-  
-  // const unsigned int nsamples = 100;
-  //
-  // std::vector<double> elossv;
-  // elossv.reserve(nsamples);
-  // for (unsigned int isample = 0; isample < nsamples; ++isample) {
-  //     double eloss = 1e-3*fluct->SampleFluctuations2(mate, aTrack->GetDynamicParticle(), Emaxmev, stepLengthmm, ekinmev);
-  //
-  //     elossv.push_back(eloss);
-  // }
-  //
-  // std::sort(elossv.begin(), elossv.end());
-  //
-  // unsigned int imode = 0.24672310*nsamples;
-  // unsigned int imed = nsamples/2;
-  //
-  // const double mode = elossv[imode];
-  // const double med = elossv[imed];
-  //
-  // constexpr double k = -0.22278;
-  // constexpr double km = 1.35578;
-  //
-  // const double csampled = 0.5*M_PI*(med-mode)/(km-k);
-
-  // std::cout << "mode = " << mode << " med = " << med << " csampled = " << csampled << std::endl;
-
-  
-
-//   std::cout << "dedxSq = " << dedxSq << " dedxsqurban = " << dedxsqurban << std::endl;
   
   G4double dedxsqvavilov =
     XI * Emax * (1. - (beta * beta / 2.)) * 1.E-12;  // now in GeV^2
@@ -1817,34 +1286,11 @@ double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pfor
 
   const double dedxsqfixed = XI*1e-6;
 
-  // constexpr double sigalpha = 15.76; //corresponds to 0.996 quantile
-//       constexpr double sigalpha = 22.33; //corresponds to 0.998 quantile
   constexpr double sigalpha = 31.59; //corresponds to 0.999 quantile
   
   const double dedxSqlandau = sigalpha*sigalpha*XI*XI*1e-12;  
   
-  // std::cout << "material = " << mate->GetName() << " stepLengthCm = " << stepLengthCm << " urban/vavilov = " << dedxsqurban/dedxsqvavilov << std::endl;
-  
   G4double dedxSq = dedxsqurban;
-//   G4double dedxSq = 0.01*dedxsqvavilov;
-  // G4double dedxSq = dedxsqvavilov;
-  // G4double dedxSq = dedxsqvavilovtruncated;
-  // G4double dedxSq = dedxsqfixed;
-//   G4double dedxSq = dedxSqlandau;
-
-//   std::cout << "dedxsqurban = " << dedxsqurban << " dedxsqvavilov = " << dedxsqvavilov << " dedxsqvavilovtruncated = " << dedxsqvavilovtruncated << std::endl;;
-
-
-//   dedxSq = 1.7*1.7*XI*XI*1e-12;
-//   dedxSq = 15.76*15.76*XI*XI*1e-12; //corresponds to 0.996 quantile
-
-//   if (true) {
-//     if(XI / Emax < 0.01)
-//       dedxSq *=
-//         XI / Emax * 100;  // Quench for low Elos, see above: newVar=odVar *k/0.01
-//   }
-  
-//   std::cout << "Geant4ePropagatorcvh xi = " << XI << " emax = " << Emax << " dedxSq = " << dedxSq << std::endl;
 
 #ifdef G4EVERBOSE
   if(iverbose >= 2)

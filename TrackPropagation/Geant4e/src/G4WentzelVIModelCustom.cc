@@ -23,7 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id$
 //
 // -------------------------------------------------------------------
 //
@@ -71,40 +70,20 @@
 
 using namespace std;
 
+const G4double invsqrt12 = 1./std::sqrt(12.);
+const G4double numlimit = 0.1;
+const G4int minNCollisions = 10;
+
 G4WentzelVIModelCustom::G4WentzelVIModelCustom(G4bool comb, const G4String& nam)
   : G4VMscModel(nam),
-    ssFactor(1.05),
-    invssFactor(1.0),
-    currentCouple(nullptr),
-    cosThetaMin(1.0),
-    cosThetaMax(-1.0),
-    fSecondMoments(nullptr),
-    idx2(0),
-    numlimit(0.1),
     singleScatteringMode(false),
     isCombined(comb),
     useSecondMoment(false)
 {
+  tlimitminfix = 1.e-6*CLHEP::mm;
+  lowEnergyLimit = 1.0*CLHEP::eV;
   SetSingleScatteringFactor(1.25);
-  invsqrt12 = 1./sqrt(12.);
-  tlimitminfix = 1.e-6*mm;
-  lowEnergyLimit = 1.0*eV;
-  particle = nullptr;
-  nelments = 5;
-  xsecn.resize(nelments);
-  prob.resize(nelments);
-  wokvi = new G4WentzelOKandVIxSection(isCombined); 
-  fixedCut = -1.0;
-
-  minNCollisions = 10;
-
-  preKinEnergy = effKinEnergy = tPathLength = zPathLength = lambdaeff 
-    = currentRange = xtsec = cosTetMaxNuc = 0.0;
-  currentMaterialIndex = 0;
-
-  fParticleChange = nullptr;
-  currentCuts = nullptr;
-  currentMaterial = nullptr;
+  wokvi = new G4WentzelOKandVIxSection(isCombined);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -112,7 +91,7 @@ G4WentzelVIModelCustom::G4WentzelVIModelCustom(G4bool comb, const G4String& nam)
 G4WentzelVIModelCustom::~G4WentzelVIModelCustom()
 {
   delete wokvi;
-  if(fSecondMoments && IsMaster()) {
+  if(IsMaster()) {
     delete fSecondMoments;
     fSecondMoments = nullptr;
   }
@@ -125,6 +104,7 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
 {
   // reset parameters
   SetupParticle(p);
+  InitialiseParameters(p);
   currentRange = 0.0;
 
   if(isCombined) {
@@ -132,7 +112,7 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
     if(tet <= 0.0)           { cosThetaMax = 1.0; }
     else if(tet < CLHEP::pi) { cosThetaMax = cos(tet); }
   }
-  //G4cout << "G4WentzelVIModelCustom::Initialise " << p->GetParticleName()
+  //G4cout << "G4WentzelVIModelCustom::Initialise " << p->GetParticleName() 
   //	 << " " << this << " " << wokvi << G4endl;
 
   wokvi->Initialise(p, cosThetaMax);
@@ -147,18 +127,26 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
   // set values of some data members
   fParticleChange = GetParticleChangeForMSC(p);
 
+  // Access to materials
+  const G4ProductionCutsTable* theCoupleTable =
+    G4ProductionCutsTable::GetProductionCutsTable();
+  G4int numOfCouples = (G4int)theCoupleTable->GetTableSize();
+  nelments = 0;
+  for(G4int i=0; i<numOfCouples; ++i) {
+    G4int nelm = (G4int)theCoupleTable->GetMaterialCutsCouple(i)->GetMaterial()->GetNumberOfElements();
+    nelments = std::max(nelments, nelm);
+  }
+  xsecn.resize(nelments);
+  prob.resize(nelments);
+
   // build second moment table only if transport table is build
   G4PhysicsTable* table = GetCrossSectionTable();
-  if(useSecondMoment && IsMaster() && table) {
+  if(useSecondMoment && IsMaster() && nullptr != table) {
 
     //G4cout << "### G4WentzelVIModelCustom::Initialise: build 2nd moment table "
     //           << table << G4endl;
     fSecondMoments =  
       G4PhysicsTableHelper::PreparePhysicsTable(fSecondMoments);
-    // Access to materials
-    const G4ProductionCutsTable* theCoupleTable =
-      G4ProductionCutsTable::GetProductionCutsTable();
-    size_t numOfCouples = theCoupleTable->GetTableSize();
 
     G4bool splineFlag = true;
     G4PhysicsVector* aVector = nullptr;
@@ -166,11 +154,11 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
     G4double emin = std::max(LowEnergyLimit(), LowEnergyActivationLimit());
     G4double emax = std::min(HighEnergyLimit(), HighEnergyActivationLimit());
     if(emin < emax) {
-      size_t n = G4EmParameters::Instance()->NumberOfBinsPerDecade()
+      std::size_t n = G4EmParameters::Instance()->NumberOfBinsPerDecade()
         *G4lrint(std::log10(emax/emin));
       if(n < 3) { n = 3; }
 
-      for(size_t i=0; i<numOfCouples; ++i) {
+      for(G4int i=0; i<numOfCouples; ++i) {
 
         //G4cout<< "i= " << i << " Flag=  " << fSecondMoments->GetFlag(i) 
         //      << G4endl;
@@ -178,13 +166,13 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
           DefineMaterial(theCoupleTable->GetMaterialCutsCouple(i));
        
           delete (*fSecondMoments)[i];
-          if(!aVector) { 
-            aVector = new G4PhysicsLogVector(emin, emax, n);
+          if(nullptr == aVector) { 
+            aVector = new G4PhysicsLogVector(emin, emax, n, splineFlag);
             bVector = aVector;
           } else {
             bVector = new G4PhysicsVector(*aVector);
           }
-          for(size_t j=0; j<n; ++j) {
+          for(std::size_t j=0; j<n; ++j) {
             G4double e = bVector->Energy(j); 
             bVector->PutValue(j, ComputeSecondMoment(p, e)*e*e);
           }
@@ -199,7 +187,7 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void G4WentzelVIModelCustom::InitialiseLocal(const G4ParticleDefinition*,
+void G4WentzelVIModelCustom::InitialiseLocal(const G4ParticleDefinition*, 
                                        G4VEmModel* masterModel)
 {
   fSecondMoments = static_cast<G4WentzelVIModelCustom*>(masterModel)
@@ -208,7 +196,7 @@ void G4WentzelVIModelCustom::InitialiseLocal(const G4ParticleDefinition*,
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-void G4WentzelVIModelCustom::DefineMaterial(const G4MaterialCutsCouple* cup)
+void G4WentzelVIModelCustom::DefineMaterial(const G4MaterialCutsCouple* cup) 
 { 
   if(cup != currentCouple) {
     currentCouple = cup;
@@ -229,7 +217,7 @@ G4double G4WentzelVIModelCustom::ComputeCrossSectionPerAtom(
   G4double cross = 0.0;
   SetupParticle(p); 
   if(kinEnergy < lowEnergyLimit) { return cross; }
-  if(!CurrentCouple()) {
+  if(nullptr == CurrentCouple()) {
     G4Exception("G4WentzelVIModelCustom::ComputeCrossSectionPerAtom", "em0011",
                 FatalException, " G4MaterialCutsCouple is not defined");
     return 0.0;
@@ -242,7 +230,7 @@ G4double G4WentzelVIModelCustom::ComputeCrossSectionPerAtom(
     cross = wokvi->ComputeTransportCrossSectionPerAtom(cost);
     /*
     if(p->GetParticleName() == "e-")      
-    G4cout << "G4WentzelVIModelCustom::CS: Z= " << G4int(Z) << " e(MeV)= "<<kinEnergy
+    G4cout << "G4WentzelVIModelCustom::CS: Z= " << G4int(Z) << " e(MeV)= "<<kinEnergy 
            << " 1-cosN= " << 1 - cosTetMaxNuc << " cross(bn)= " << cross/barn
            << " " << particle->GetParticleName() << G4endl;
     */
@@ -270,11 +258,11 @@ G4double G4WentzelVIModelCustom::ComputeTruePathLengthLimit(
 {
   G4double tlimit = currentMinimalStep;
   const G4DynamicParticle* dp = track.GetDynamicParticle();
-  G4StepPoint* sp = track.GetStep()->GetPreStepPoint();
+  const G4StepPoint* sp = track.GetStep()->GetPreStepPoint();
   G4StepStatus stepStatus = sp->GetStepStatus();
   singleScatteringMode = false;
 
-  //G4cout << "G4WentzelVIModelCustom::ComputeTruePathLengthLimit stepStatus= "
+  //G4cout << "G4WentzelVIModelCustom::ComputeTruePathLengthLimit stepStatus= " 
   //         << stepStatus << "  " << track.GetDefinition()->GetParticleName() 
   //         << G4endl;
 
@@ -282,8 +270,9 @@ G4double G4WentzelVIModelCustom::ComputeTruePathLengthLimit(
   preKinEnergy = dp->GetKineticEnergy();
   effKinEnergy = preKinEnergy;
   DefineMaterial(track.GetMaterialCutsCouple());
-  lambdaeff = GetTransportMeanFreePath(particle,preKinEnergy);
-  currentRange = GetRange(particle,preKinEnergy,currentCouple);
+  const G4double logPreKinEnergy = dp->GetLogKineticEnergy();
+  lambdaeff = GetTransportMeanFreePath(particle,preKinEnergy,logPreKinEnergy);
+  currentRange = GetRange(particle,preKinEnergy,currentCouple,logPreKinEnergy);
   cosTetMaxNuc = wokvi->SetupKinematic(preKinEnergy, currentMaterial);
   
   //G4cout << "lambdaeff= " << lambdaeff << " Range= " << currentRange
@@ -476,9 +465,6 @@ G4double G4WentzelVIModelCustom::ComputeTrueStepLength(G4double geomStepLength)
       } else if(xtsec > 0.0) {
         
         lambdaeff = 1./cross; 
-
-//         std::cout << "alternate lambdaeff: cross = " << cross << " lambdaeff = " << lambdaeff << std::endl;
-
         G4double tau = zPathLength*cross;
         if(tau < numlimit) { 
           tPathLength = zPathLength*(1.0 + 0.5*tau + tau*tau/3.0); 
@@ -504,15 +490,12 @@ G4double G4WentzelVIModelCustom::ComputeTrueStepLength(G4double geomStepLength)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4ThreeVector&
+G4ThreeVector& 
 G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
                                    G4double /*safety*/)
 {
-
-//   std::cout << "tPathLength = " << tPathLength << " zPathLength =  " << zPathLength << std::endl;
-
   fDisplacement.set(0.0,0.0,0.0);
-  //G4cout << "!##! G4WentzelVIModelCustom::SampleScattering for "
+  //G4cout << "!##! G4WentzelVIModelCustom::SampleScattering for " 
   //         << particle->GetParticleName() << G4endl;
 
   // ignore scattering for zero step length and energy below the limit
@@ -574,7 +557,7 @@ G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
 
   const G4ElementVector* theElementVector = 
     currentMaterial->GetElementVector();
-  G4int nelm = currentMaterial->GetNumberOfElements();
+  std::size_t nelm = currentMaterial->GetNumberOfElements();
 
   // geometry
   G4double sint, cost, phi;
@@ -623,7 +606,7 @@ G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
     if(singleScat) {
 
       // select element
-      G4int i = 0;
+      std::size_t i = 0;
       if(nelm > 1) {
         G4double qsec = rndmEngine->flat()*xtsec;
         for (; i<nelm; ++i) { if(xsecn[i] >= qsec) { break; } }
@@ -714,7 +697,6 @@ G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
 
   //G4cout<< "G4WentzelVIModelCustom::SampleScattering end NewDir= " << dir<< G4endl;
   return fDisplacement;
-//   return dir;
 }
 
 G4ThreeVector
@@ -944,6 +926,7 @@ double G4WentzelVIModelCustom::ProjectedVariance() const {
   return tPathLength/lambdaeff;
 }
 
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 G4double G4WentzelVIModelCustom::ComputeTransportXSectionPerVolume(G4double cosTheta)
@@ -952,7 +935,7 @@ G4double G4WentzelVIModelCustom::ComputeTransportXSectionPerVolume(G4double cosT
   const G4ElementVector* theElementVector = currentMaterial->GetElementVector();
   const G4double* theAtomNumDensityVector = 
     currentMaterial->GetVecNbOfAtomsPerVolume();
-  G4int nelm = currentMaterial->GetNumberOfElements();
+  G4int nelm = (G4int)currentMaterial->GetNumberOfElements();
   if(nelm > nelments) {
     nelments = nelm;
     xsecn.resize(nelm);
@@ -1014,13 +997,13 @@ G4double G4WentzelVIModelCustom::ComputeSecondMoment(const G4ParticleDefinition*
   const G4ElementVector* theElementVector = currentMaterial->GetElementVector();
   const G4double* theAtomNumDensityVector = 
     currentMaterial->GetVecNbOfAtomsPerVolume();
-  G4int nelm = currentMaterial->GetNumberOfElements();
+  std::size_t nelm = currentMaterial->GetNumberOfElements();
 
   G4double cut = (*currentCuts)[currentMaterialIndex];
   if(fixedCut > 0.0) { cut = fixedCut; }
 
   // loop over elements
-  for (G4int i=0; i<nelm; ++i) {
+  for (std::size_t i=0; i<nelm; ++i) {
     G4double costm = 
       wokvi->SetupTarget((*theElementVector)[i]->GetZasInt(), cut);
     xs += theAtomNumDensityVector[i]
@@ -1040,3 +1023,4 @@ void G4WentzelVIModelCustom::SetSingleScatteringFactor(G4double val)
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+

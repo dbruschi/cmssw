@@ -1,5 +1,5 @@
-#ifndef TrackPropagation_Geant4e_Geant4ePropagatorcvh_h
-#define TrackPropagation_Geant4e_Geant4ePropagatorcvh_h
+#ifndef TrackPropagation_Geant4ePropagatorcvh_h
+#define TrackPropagation_Geant4ePropagatorcvh_h
 
 #include <memory>
 
@@ -191,4 +191,3 @@ private:
 };
 
 #endif
-

@@ -136,6 +136,10 @@ void ResidualGlobalCorrectionMakerG4e::beginStream(edm::StreamID streamid)
     tree->Branch("refCov", refCov.data(), "refCov[25]/F", basketSize);
     tree->Branch("genParms", genParms.data(), "genParms[5]/F", basketSize);
 
+    tree->Branch("UpdPt", &UpdPt, basketSize);
+    tree->Branch("UpdEta", &UpdEta, basketSize);
+    tree->Branch("UpdPhi", &UpdPhi, basketSize);
+
     tree->Branch("genPt", &genPt, basketSize);
     tree->Branch("genEta", &genEta, basketSize);
     tree->Branch("genPhi", &genPhi, basketSize);
@@ -2032,9 +2036,8 @@ void ResidualGlobalCorrectionMakerG4e::produce(edm::Event &iEvent, const edm::Ev
                 const StripTopology* striptopology = dynamic_cast<const StripTopology*>(&(tkhit->det()->topology()));
                 const SiStripCluster& cluster = *tkhit->cluster_strip();
   //               siStripClusterInfo_.setCluster(cluster, preciseHit->geographicalId().rawId());
-                SiStripClusterInfo clusterInfo = SiStripClusterInfo(consumesCollector(), std::string(""));
-                clusterInfo.initEvent(iSetup);
-                clusterInfo.setCluster(cluster, preciseHit->geographicalId().rawId());
+                clusterInfo_.initEvent(iSetup);
+                clusterInfo_.setCluster(cluster, preciseHit->geographicalId().rawId());
                 clusterSize.push_back(cluster.amplitudes().size());
                 clusterSizeX.push_back(cluster.amplitudes().size());
                 clusterSizeY.push_back(1);
@@ -2042,7 +2045,7 @@ void ResidualGlobalCorrectionMakerG4e::produce(edm::Event &iEvent, const edm::Ev
                 clusterChargeBin.push_back(-99);
                 clusterOnEdge.push_back(-99);
                 clusterProbXY.push_back(-99.);
-                clusterSN.push_back(clusterInfo.signalOverNoise());
+                clusterSN.push_back(clusterInfo_.signalOverNoise());
 
 
                 const uint16_t firstStrip = cluster.firstStrip();
@@ -2926,10 +2929,6 @@ void ResidualGlobalCorrectionMakerG4e::produce(edm::Event &iEvent, const edm::Ev
 
 //     std::cout << "refParms[0]: " << refParms[0] << std::endl;
 
-    if (fillTrackTree_) {
-      tree->Fill();
-    }
-
 
 
     if (muonref.isNonnull()) {
@@ -2974,7 +2973,23 @@ void ResidualGlobalCorrectionMakerG4e::produce(edm::Event &iEvent, const edm::Ev
 //       std::cout << momCovout << std::endl;
     }
 
+    const double Qbpupd = refParmsMomD[0];
+    const double Lamupd = refParmsMomD[1];
+    const double Phiupd = refParmsMomD[2];
 
+    const double Ptupd = std::cos(Lamupd)/std::abs(Qbpupd);
+    const double Chargeupd = std::copysign(1., Qbpupd);
+
+    const double Thetaupd = M_PI_2 - Lamupd;
+    const double Etaupd = -std::log(std::tan(0.5*Thetaupd));
+
+    UpdPt = Ptupd;
+    UpdEta = Etaupd;
+    UpdPhi = Phiupd;
+
+    if (fillTrackTree_) {
+      tree->Fill();
+    }
 
   }
 

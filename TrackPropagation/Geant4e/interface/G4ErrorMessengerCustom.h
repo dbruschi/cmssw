@@ -24,7 +24,6 @@
 // ********************************************************************
 //
 //
-// $Id$
 //
 // Class Description:
 //
@@ -53,20 +52,18 @@ class G4ErrorEnergyLossCustom;
 class G4ErrorMessengerCustom : public G4UImessenger
 {
  public:  // with description
-
   G4ErrorMessengerCustom(G4ErrorStepLengthLimitProcess* lengthAct,
                    G4ErrorMagFieldLimitProcess* magAct,
                    G4ErrorEnergyLossCustom* elossAct);
   ~G4ErrorMessengerCustom();
-  
+
   void SetNewValue(G4UIcommand*, G4String);
 
  private:
-
   G4ErrorStepLengthLimitProcess* StepLengthAction;
   G4ErrorMagFieldLimitProcess* MagFieldAction;
   G4ErrorEnergyLossCustom* EnergyLossAction;
-  
+
   G4UIdirectory* myDir;
   G4UIdirectory* myDirLimits;
 

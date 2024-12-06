@@ -24,7 +24,6 @@
 // ********************************************************************
 //
 //
-// $Id$
 //
 //
 // Class Description:
@@ -49,23 +48,21 @@
 class G4ErrorPhysicsListCustom: public G4VUserPhysicsList
 {
  public:  // with description
-
   G4ErrorPhysicsListCustom();
   virtual ~G4ErrorPhysicsListCustom();
-  
- protected:
 
+ protected:
   virtual void ConstructParticle();
-    // constructs gamma, e+/-, mu+/- and stable hadrons
+  // constructs gamma, e+/-, mu+/- and stable hadrons
 
   virtual void ConstructProcess();
-    // construct physical processes
+  // construct physical processes
 
-  virtual void SetCuts();  
-    // SetCutsWithDefault
+  virtual void SetCuts();
+  // SetCutsWithDefault
 
   virtual void ConstructEM();
-    // constructs electromagnetic processes
+  // constructs electromagnetic processes
 };
 
 #endif

@@ -266,7 +266,7 @@ protected:
   std::string fieldlabel_;
 
   
-//   SiStripClusterInfo siStripClusterInfo_;
+  SiStripClusterInfo clusterInfo_;
 
   
   TFile *fout = nullptr;
@@ -320,6 +320,10 @@ protected:
   
   std::array<float, 5> refParms;
   std::array<float, 25> refCov;
+
+  float UpdPt;
+  float UpdEta;
+  float UpdPhi;
   
   std::array<float, 5> genParms;
   

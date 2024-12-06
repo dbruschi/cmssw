@@ -25,40 +25,41 @@
 //
 
 #include "TrackPropagation/Geant4e/interface/G4ErrorEnergyLossCustom.h"
-#include "G4ErrorPropagatorData.hh"
-// #include "G4EnergyLossForExtrapolator.hh"
 #include "TrackPropagation/Geant4e/interface/G4EnergyLossForExtrapolatorCustom.h"
 #include "G4TransportationManager.hh"
 #include "G4FieldManager.hh"
 
 #include "SimG4Core/MagneticField/interface/Fieldcvh.h"
+#include "G4ErrorPropagatorData.hh"
 
 //-------------------------------------------------------------------
-G4ErrorEnergyLossCustom::G4ErrorEnergyLossCustom(const G4String& processName, 
+G4ErrorEnergyLossCustom::G4ErrorEnergyLossCustom(const G4String& processName,
 				     G4ProcessType type)
-           : G4VContinuousProcess(processName, type)
+  : G4VContinuousProcess(processName, type)
 {
   if (verboseLevel>2) {
     G4cout << GetProcessName() << " is created " << G4endl;
   }
 
-//   theELossForExtrapolator = new G4EnergyLossForExtrapolator;
   theELossForExtrapolator = new G4EnergyLossForExtrapolatorCustom;
-
-  theStepLimit = 1.;
-  
-  std::cout << "G4ErrorEnergyLossCustom constructor" << std::endl;
+  theStepLimit = 1.*CLHEP::mm;
 }
 
 //-------------------------------------------------------------------
 void G4ErrorEnergyLossCustom::InstantiateEforExtrapolator()
 {}
 
-
 //-------------------------------------------------------------------
-G4ErrorEnergyLossCustom::~G4ErrorEnergyLossCustom() 
+G4ErrorEnergyLossCustom::~G4ErrorEnergyLossCustom()
 {
   delete theELossForExtrapolator;
+}
+
+//-------------------------------------------------------------------
+
+G4bool G4ErrorEnergyLossCustom::IsApplicable(const G4ParticleDefinition& aParticleType)
+{
+   return (aParticleType.GetPDGCharge() != 0);
 }
 
 //-------------------------------------------------------------------
@@ -67,15 +68,13 @@ G4ErrorEnergyLossCustom::AlongStepDoIt(const G4Track& aTrack, const G4Step& aSte
 {
   aParticleChange.Initialize(aTrack);
 
-  G4ErrorPropagatorData* g4edata =  G4ErrorPropagatorData::GetErrorPropagatorData();
+  G4ErrorPropagatorData* g4edata = G4ErrorPropagatorData::GetErrorPropagatorData();
 
   const G4Field *field = G4TransportationManager::GetTransportationManager()->GetFieldManager()->GetDetectorField();
   const sim::Fieldcvh *cmsField = static_cast<const sim::Fieldcvh*>(field);
   const double dxi = cmsField->GetMaterialOffset();
   const double xifact = std::exp(dxi);
 
-//   std::cout << "custom energy loss with dxi = " << dxi << std::endl;
-  
   G4double kinEnergyStart = aTrack.GetKineticEnergy();
   G4double step_length  = aStep.GetStepLength();
 
@@ -83,13 +82,14 @@ G4ErrorEnergyLossCustom::AlongStepDoIt(const G4Track& aTrack, const G4Step& aSte
   const G4ParticleDefinition* aParticleDef = aTrack.GetDynamicParticle()->GetDefinition();
   G4double kinEnergyEnd = kinEnergyStart;
 
+  // backward - energy increased
   if( g4edata->GetMode() == G4ErrorMode(G4ErrorMode_PropBackwards) ) {
     kinEnergyEnd = theELossForExtrapolator->EnergyBeforeStep( kinEnergyStart, 
 							      step_length, 
 							      aMaterial, 
 							      aParticleDef );
     kinEnergyEnd = kinEnergyStart - xifact*(kinEnergyStart-kinEnergyEnd);
-    G4double kinEnergyHalfStep = kinEnergyStart - (kinEnergyStart-kinEnergyEnd)/2.;
+    G4double kinEnergyHalfStep = (kinEnergyStart + kinEnergyEnd) * 0.5;
 
 #ifdef G4VERBOSE
   if(G4ErrorPropagatorData::verbose() >= 3 ) 
@@ -103,13 +103,15 @@ G4ErrorEnergyLossCustom::AlongStepDoIt(const G4Track& aTrack, const G4Step& aSte
 							      aMaterial, 
 							      aParticleDef );
     kinEnergyEnd = kinEnergyStart - xifact*(kinEnergyHalfStep - kinEnergyEnd );
-  }else if( g4edata->GetMode() == G4ErrorMode(G4ErrorMode_PropForwards) ) {
+
+    // forward - energy decreased
+  } else {
     kinEnergyEnd = theELossForExtrapolator->EnergyAfterStep( kinEnergyStart, 
 							     step_length, 
 							     aMaterial, 
 							     aParticleDef );
     kinEnergyEnd = kinEnergyStart - xifact*(kinEnergyStart-kinEnergyEnd);
-    G4double kinEnergyHalfStep = kinEnergyStart - (kinEnergyStart-kinEnergyEnd)/2.;
+    G4double kinEnergyHalfStep = (kinEnergyStart + kinEnergyEnd) * 0.5;
 #ifdef G4VERBOSE
   if(G4ErrorPropagatorData::verbose() >= 3 ) 
     G4cout << " G4ErrorEnergyLossCustom BCKD  end " << kinEnergyEnd 
@@ -146,43 +148,21 @@ G4ErrorEnergyLossCustom::AlongStepDoIt(const G4Track& aTrack, const G4Step& aSte
 
 //-------------------------------------------------------------------
 G4double G4ErrorEnergyLossCustom::GetContinuousStepLimit(const G4Track& aTrack,
-				    G4double ,
-				    G4double currentMinimumStep,
-                                    G4double& )
-{
-  G4double Step = DBL_MAX;
-  if( theStepLimit != 1. ) { 
-    G4double kinEnergyStart = aTrack.GetKineticEnergy();
-    G4double kinEnergyLoss = kinEnergyStart;
-    const G4Material* aMaterial = aTrack.GetMaterial();
-    const G4ParticleDefinition* aParticleDef = aTrack.GetDynamicParticle()->GetDefinition();
-    G4ErrorPropagatorData* g4edata =  G4ErrorPropagatorData::GetErrorPropagatorData();
-    if( g4edata->GetMode() == G4ErrorMode(G4ErrorMode_PropBackwards) ) {
-      kinEnergyLoss = - kinEnergyStart + 
-	theELossForExtrapolator->EnergyBeforeStep( kinEnergyStart, currentMinimumStep, 
-						   aMaterial, aParticleDef );
-    }else if( g4edata->GetMode() == G4ErrorMode(G4ErrorMode_PropForwards) ) {
-      kinEnergyLoss = kinEnergyStart - 
-	theELossForExtrapolator->EnergyAfterStep( kinEnergyStart, currentMinimumStep, 
-						  aMaterial, aParticleDef );
-    }
+				    G4double, G4double, G4double& )
+{ 
+  G4double ekin = aTrack.GetKineticEnergy();
+  const G4Material* mat = aTrack.GetMaterial();
+  const G4ParticleDefinition* part = 
+    aTrack.GetDynamicParticle()->GetDefinition();
+  G4double range = theELossForExtrapolator->ComputeRange(ekin, part, mat);
+  G4double delta = std::max(range*theFractionLimit, theStepLimit);
 #ifdef G4VERBOSE
-  if(G4ErrorPropagatorData::verbose() >= 3 ) 
-    G4cout << " G4ErrorEnergyLossCustom: currentMinimumStep " <<currentMinimumStep 
-	   << "  kinEnergyLoss " << kinEnergyLoss 
-	   << " kinEnergyStart " << kinEnergyStart << G4endl;
-#endif
-    if( kinEnergyLoss / kinEnergyStart > theStepLimit ) {
-      Step = theStepLimit / (kinEnergyLoss / kinEnergyStart)  * currentMinimumStep;
-#ifdef G4VERBOSE
-  if(G4ErrorPropagatorData::verbose() >= 2 ) 
-    G4cout << " G4ErrorEnergyLossCustom: limiting Step " << Step 
-	   << " energy loss fraction " << kinEnergyLoss / kinEnergyStart 
-	   << " > " << theStepLimit << G4endl;
-#endif
-    }
+  if(G4ErrorPropagatorData::verbose() >= 2 ) {
+    G4cout << " G4ErrorEnergyLossCustom: limiting Step " << delta 
+	   << " energy(GeV) " << ekin / CLHEP::GeV 
+	   << " for " << part->GetParticleName() << G4endl;
   }
-  
-  return Step;
-
+#endif
+  return delta;
 }
+

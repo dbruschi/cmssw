@@ -50,52 +50,38 @@ class G4ErrorEnergyLossCustom : public G4VContinuousProcess
 public: 
 
   explicit G4ErrorEnergyLossCustom(const G4String& processName = "G4ErrorEnergyLossCustom",
-		    G4ProcessType type = fElectromagnetic);
+                             G4ProcessType type = fElectromagnetic);
 
-  virtual ~G4ErrorEnergyLossCustom();	
-
+  ~G4ErrorEnergyLossCustom() override;
 
   G4bool IsApplicable(const G4ParticleDefinition& aParticleType) override;
   // Returns true -> 'is applicable', for all charged particles.
 
   G4double GetContinuousStepLimit(const G4Track& aTrack,
-				  G4double     ,
-				  G4double currentMinimumStep,
+				  G4double, G4double currentMinimumStep,
 				  G4double& ) override;
-  // Returns DBL_MAX as continuous step limit
 
   G4VParticleChange* AlongStepDoIt(const G4Track& aTrack, 
 				   const G4Step&  aStep) override;
   // This is the method implementing the energy loss process.
 
   // Get and Set methods
-  G4double GetStepLimit() const { return theStepLimit; }
-  void SetStepLimit( G4double val ) { theStepLimit = val; }
-
-private:
-
-  void InstantiateEforExtrapolator();
-  // Create the G4EnergyLossForExtrapolator
+  inline G4double GetStepLimit() const { return theStepLimit; }
+  inline void SetStepLimit( G4double val ) { theStepLimit = val; }
 
   // copy constructor and hide assignment operator
   G4ErrorEnergyLossCustom(G4ErrorEnergyLossCustom &) = delete;
   G4ErrorEnergyLossCustom & operator=(const G4ErrorEnergyLossCustom &right) = delete;
 
 private:
+
+  void InstantiateEforExtrapolator();
+
   G4EnergyLossForExtrapolatorCustom* theELossForExtrapolator;
 
   G4double theStepLimit;
+  G4double theFractionLimit = 0.2;
 };
 
-////////////////////
-// Inline methods
-////////////////////
-
-inline 
-G4bool G4ErrorEnergyLossCustom::IsApplicable(const G4ParticleDefinition& aParticleType)
-{
-   return (aParticleType.GetPDGCharge() != 0);
-}
-
-#endif /* G4ErrorEnergyLossCustom_hh */
+#endif
 

@@ -23,8 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: G4TablesForExtrapolatorCustom.cc 75145 2013-10-28 18:34:48Z vnivanch $
-//
 //---------------------------------------------------------------------------
 //
 // ClassName:    G4TablesForExtrapolatorCustom
@@ -51,6 +49,7 @@
 #include "TrackPropagation/Geant4e/interface/Geant4ePropagatorcvh.h"
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4LossTableManager.hh"
 #include "G4PhysicsLogVector.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4Material.hh"
@@ -63,22 +62,28 @@
 #include "G4EmParameters.hh"
 #include "G4MollerBhabhaModel.hh"
 #include "G4BetheBlochModel.hh"
-#include "G4MuBetheBlochModel.hh"
 #include "G4eBremsstrahlungRelModel.hh"
 #include "G4MuPairProductionModel.hh"
 #include "G4MuBremsstrahlungModel.hh"
 #include "G4ProductionCuts.hh"
 #include "G4LossTableBuilder.hh"
 #include "G4WentzelVIModel.hh"
+#include "G4ios.hh"
+#include "G4MuBetheBlochModel.hh"
 #include "G4ProductionCutsTable.hh"
 #include "G4RunManagerKernel.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4TablesForExtrapolatorCustom::G4TablesForExtrapolatorCustom(G4int verb, G4int bins, 
+G4TablesForExtrapolatorCustom::G4TablesForExtrapolatorCustom(G4int verb, G4int bins,
                                                  G4double e1, G4double e2, G4bool iononly)
-  : verbose(verb), nbins(bins), emin(e1), emax(e2), ionOnly(iononly)
+  : emin(e1), emax(e2), verbose(verb), nbins(bins), ionOnly(iononly)
 {
+  electron = G4Electron::Electron();
+  positron = G4Positron::Positron();
+  proton   = G4Proton::Proton();
+  muonPlus = G4MuonPlus::MuonPlus();
+  muonMinus= G4MuonMinus::MuonMinus();
   Initialisation();
 }
 
@@ -86,36 +91,60 @@ G4TablesForExtrapolatorCustom::G4TablesForExtrapolatorCustom(G4int verb, G4int b
 
 G4TablesForExtrapolatorCustom:: ~G4TablesForExtrapolatorCustom()
 {
-  for(G4int i=0; i<nmat; i++) {delete couples[i];}
-
-  dedxElectron->clearAndDestroy();
-  dedxPositron->clearAndDestroy();
-  dedxProton->clearAndDestroy();
-  dedxMuon->clearAndDestroy();
-  rangeElectron->clearAndDestroy();
-  rangePositron->clearAndDestroy();
-  rangeProton->clearAndDestroy();
-  rangeMuon->clearAndDestroy();
-  invRangeElectron->clearAndDestroy();
-  invRangePositron->clearAndDestroy();
-  invRangeProton->clearAndDestroy();
-  invRangeMuon->clearAndDestroy();
-  mscElectron->clearAndDestroy();
-
-  delete dedxElectron;
-  delete dedxPositron;
-  delete dedxProton;
-  delete dedxMuon;
-  delete rangeElectron;
-  delete rangePositron;
-  delete rangeProton;
-  delete rangeMuon;
-  delete invRangeElectron;
-  delete invRangePositron;
-  delete invRangeProton;
-  delete invRangeMuon;
-  delete mscElectron;
+  if(nullptr != dedxElectron) {
+    dedxElectron->clearAndDestroy();
+    delete dedxElectron;
+  }
+  if(nullptr != dedxPositron) {
+    dedxPositron->clearAndDestroy();
+    delete dedxPositron;
+  }
+  if(nullptr != dedxProton) {
+    dedxProton->clearAndDestroy();
+    delete dedxProton;
+  }
+  if(nullptr != dedxMuon) {
+    dedxMuon->clearAndDestroy();
+    delete dedxMuon;
+  }
+  if(nullptr != rangeElectron) {
+    rangeElectron->clearAndDestroy();
+    delete rangeElectron;
+  }
+  if(nullptr != rangePositron) {
+    rangePositron->clearAndDestroy();
+    delete rangePositron;
+  }
+  if(nullptr != rangeProton) {
+    rangeProton->clearAndDestroy();
+    delete rangeProton;
+  }
+  if(nullptr != rangeMuon) {
+    rangeMuon->clearAndDestroy();
+    delete rangeMuon;
+  }
+  if(nullptr != invRangeElectron) {
+    invRangeElectron->clearAndDestroy();
+    delete invRangeElectron;
+  }
+  if(nullptr != invRangePositron) {
+    invRangePositron->clearAndDestroy();
+    delete invRangePositron;
+  }
+  if(nullptr != invRangeProton) {
+    invRangeProton->clearAndDestroy();
+    delete invRangeProton;
+  }
+  if(nullptr != invRangeMuon) {
+    invRangeMuon->clearAndDestroy();
+    delete invRangeMuon;
+  }
+  if(nullptr != mscElectron) {
+    mscElectron->clearAndDestroy();
+    delete mscElectron;
+  }
   delete pcuts;
+  delete builder;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
@@ -175,90 +204,84 @@ void G4TablesForExtrapolatorCustom::Initialisation()
   if(verbose>1) {
     G4cout << "### G4TablesForExtrapolatorCustom::Initialisation" << G4endl;
   }
-  currentParticle = nullptr;
+  G4int num = (G4int)G4Material::GetNumberOfMaterials();
+  if(nmat == num) { return; }
+  nmat = num;
+  cuts.resize(nmat, DBL_MAX);
+  couples.resize(nmat, nullptr);
 
-  electron = G4Electron::Electron();
-  positron = G4Positron::Positron();
-  proton   = G4Proton::Proton();
-  muonPlus = G4MuonPlus::MuonPlus();
-  muonMinus= G4MuonMinus::MuonMinus();
-
-  mass = charge2 = 0.0;
-
-  nmat = G4Material::GetNumberOfMaterials();
   const G4MaterialTable* mtable = G4Material::GetMaterialTable();
-  pcuts = new G4ProductionCuts();
-
-  couples.resize(nmat,0);
-  cuts.resize(nmat,DBL_MAX);
+  if(!pcuts) { pcuts = new G4ProductionCuts(); }
 
   for(G4int i=0; i<nmat; ++i) {
-    couples[i] = new G4MaterialCutsCouple((*mtable)[i],pcuts);  
+    couples[i] = new G4MaterialCutsCouple((*mtable)[i],pcuts);
   }
 
-  dedxElectron     = PrepareTable();
-  dedxPositron     = PrepareTable();
-  dedxMuon         = PrepareTable();
-  dedxProton       = PrepareTable();
-  rangeElectron    = PrepareTable();
-  rangePositron    = PrepareTable();
-  rangeMuon        = PrepareTable();
-  rangeProton      = PrepareTable();
-  invRangeElectron = PrepareTable();
-  invRangePositron = PrepareTable();
-  invRangeMuon     = PrepareTable();
-  invRangeProton   = PrepareTable();
-  mscElectron      = PrepareTable();
+  dedxElectron     = PrepareTable(dedxElectron);
+  dedxPositron     = PrepareTable(dedxPositron);
+  dedxMuon         = PrepareTable(dedxMuon);
+  dedxProton       = PrepareTable(dedxProton);
+  rangeElectron    = PrepareTable(rangeElectron);
+  rangePositron    = PrepareTable(rangePositron);
+  rangeMuon        = PrepareTable(rangeMuon);
+  rangeProton      = PrepareTable(rangeProton);
+  invRangeElectron = PrepareTable(invRangeElectron);
+  invRangePositron = PrepareTable(invRangePositron);
+  invRangeMuon     = PrepareTable(invRangeMuon);
+  invRangeProton   = PrepareTable(invRangeProton);
+  mscElectron      = PrepareTable(mscElectron);
 
-  G4LossTableBuilder builder; 
+  builder = new G4LossTableBuilder(true);
+  builder->SetBaseMaterialActive(false);
 
   if(verbose>1) {
     G4cout << "### G4TablesForExtrapolatorCustom Builds electron tables" 
 	   << G4endl;
   }
   ComputeElectronDEDX(electron, dedxElectron);
-  builder.BuildRangeTable(dedxElectron,rangeElectron);  
-  builder.BuildInverseRangeTable(rangeElectron, invRangeElectron);  
+  builder->BuildRangeTable(dedxElectron,rangeElectron);  
+  builder->BuildInverseRangeTable(rangeElectron, invRangeElectron);  
 
   if(verbose>1) {
     G4cout << "### G4TablesForExtrapolatorCustom Builds positron tables" 
 	   << G4endl;
   }
   ComputeElectronDEDX(positron, dedxPositron);
-  builder.BuildRangeTable(dedxPositron, rangePositron);  
-  builder.BuildInverseRangeTable(rangePositron, invRangePositron);  
+  builder->BuildRangeTable(dedxPositron, rangePositron);  
+  builder->BuildInverseRangeTable(rangePositron, invRangePositron);  
 
   if(verbose>1) {
     G4cout << "### G4TablesForExtrapolatorCustom Builds muon tables" << G4endl;
   }
   ComputeMuonDEDX(muonPlus, dedxMuon);
-  builder.BuildRangeTable(dedxMuon, rangeMuon);  
-  builder.BuildInverseRangeTable(rangeMuon, invRangeMuon);  
-  /*
-  G4cout << "DEDX MUON" << G4endl
-  G4cout << *dedxMuon << G4endl;
-  G4cout << "RANGE MUON" << G4endl
-  G4cout << *rangeMuon << G4endl;
-  G4cout << "INVRANGE MUON" << G4endl
-  G4cout << *invRangeMuon << G4endl;
-  */
+  builder->BuildRangeTable(dedxMuon, rangeMuon);  
+  builder->BuildInverseRangeTable(rangeMuon, invRangeMuon);  
+  
+  if(verbose>2) {
+    G4cout << "DEDX MUON" << G4endl;
+    G4cout << *dedxMuon << G4endl;
+    G4cout << "RANGE MUON" << G4endl;
+    G4cout << *rangeMuon << G4endl;
+    G4cout << "INVRANGE MUON" << G4endl;
+    G4cout << *invRangeMuon << G4endl;
+  }
   if(verbose>1) {
     G4cout << "### G4TablesForExtrapolatorCustom Builds proton tables" 
 	   << G4endl;
   }
   ComputeProtonDEDX(proton, dedxProton);
-  builder.BuildRangeTable(dedxProton, rangeProton);  
-  builder.BuildInverseRangeTable(rangeProton, invRangeProton);  
+  builder->BuildRangeTable(dedxProton, rangeProton);  
+  builder->BuildInverseRangeTable(rangeProton, invRangeProton);  
 
   ComputeTrasportXS(electron, mscElectron);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4PhysicsTable* G4TablesForExtrapolatorCustom::PrepareTable()
+G4PhysicsTable* G4TablesForExtrapolatorCustom::PrepareTable(G4PhysicsTable* ptr)
 {
-  G4PhysicsTable* table = new G4PhysicsTable();
-
+  G4PhysicsTable* table = ptr;
+  if(nullptr == ptr) { table = new G4PhysicsTable(); }
   G4int n = (G4int)table->length();
   for(G4int i=n; i<nmat; ++i) {  
     G4PhysicsVector* v = new G4PhysicsLogVector(emin, emax, nbins, splineFlag);
@@ -277,6 +300,8 @@ void G4TablesForExtrapolatorCustom::ComputeElectronDEDX(
   G4eBremsstrahlungRelModel* brem = new G4eBremsstrahlungRelModel();
   ioni->Initialise(part, cuts);
   brem->Initialise(part, cuts);
+  ioni->SetUseBaseMaterials(false);
+  brem->SetUseBaseMaterials(false);
 
   mass    = electron_mass_c2;
   charge2 = 1.0;
@@ -294,14 +319,13 @@ void G4TablesForExtrapolatorCustom::ComputeElectronDEDX(
     if(1<verbose) {
       G4cout << "i= " << i << "  mat= " << mat->GetName() << G4endl;
     }
-    const G4MaterialCutsCouple* couple = couples[i];
     G4PhysicsVector* aVector = (*table)[i];
 
     for(G4int j=0; j<=nbins; ++j) {
         
        G4double e = aVector->Energy(j);
-       G4double dedx = ioni->ComputeDEDX(couple,part,e,e) 
-	 + brem->ComputeDEDX(couple,part,e,e);
+       G4double dedx = ioni->ComputeDEDXPerVolume(mat,part,e,e) 
+	 + brem->ComputeDEDXPerVolume(mat,part,e,e);
        if(1<verbose) {
          G4cout << "j= " << j
                 << "  e(MeV)= " << e/MeV  
@@ -326,13 +350,16 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
 {
   G4BetheBlochModel* ioni = new G4BetheBlochModel();
   G4MuBetheBlochModel* ionialt = new G4MuBetheBlochModel();
-//   G4MuBetheBlochModel* ioni = new G4MuBetheBlochModel();
   G4MuPairProductionModel* pair = new G4MuPairProductionModel();
   G4MuBremsstrahlungModel* brem = new G4MuBremsstrahlungModel();
   ioni->Initialise(part, cuts);
   ionialt->Initialise(part, cuts);
   pair->Initialise(part, cuts);
   brem->Initialise(part, cuts);
+  ioni->SetUseBaseMaterials(false);
+  ionialt->SetUseBaseMaterials(false);
+  pair->SetUseBaseMaterials(false);
+  brem->SetUseBaseMaterials(false);
 
   mass    = part->GetPDGMass();
   charge2 = 1.0;
@@ -340,23 +367,12 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
 
   const G4MaterialTable* mtable = G4Material::GetMaterialTable();
 
-
-//   G4ProductionCutsTable::GetProductionCutsTable()->UpdateCoupleTable(G4RunManagerKernel::GetRunManagerKernel()->GetCurrentWorld());
-
-//   const G4ProductionCutsTable* theCoupleTable=
-//     G4ProductionCutsTable::GetProductionCutsTable();
-
-//   std::cout << "couple table size = " << theCoupleTable->GetTableSize() << std::endl;
-
-//   const G4DataVector *theCuts =
-//     static_cast<const G4DataVector*>(theCoupleTable->GetEnergyCutsVector(1));
-
   if(0<verbose) {
     G4cout << "G4TablesForExtrapolatorCustom::ComputeMuonDEDX for " 
 	   << part->GetParticleName() 
            << G4endl;
   }
- 
+
   const double mass = 0.1056583745;
   const double massev = mass*1e9;
   G4double eMass     = 0.51099906 / GeV;
@@ -368,54 +384,8 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
     if(1<verbose) {
       G4cout << "i= " << i << "  mat= " << mat->GetName() << G4endl;
     }
-    const G4MaterialCutsCouple* couple = couples[i];
     G4PhysicsVector* aVector = (*table)[i];
 
-//     const size_t icouple = couple->GetIndex();
-//     const G4double cut  = (*theCuts)[icouple];
-//     const G4double cut  = 0.;
-
-//     int icouple = -1;
-//     G4double cut = 0.;
-//     for (unsigned int j=0; j<theCoupleTable->GetTableSize(); ++j) {
-//       if (theCoupleTable->GetMaterialCutsCouple(j)->GetMaterial() == mat) {
-//         icouple = j;
-// //         cut = (*theCuts)[j];
-//         cut = theCoupleTable->GetMaterialCutsCouple(j)->GetProductionCuts()->GetProductionCut("e-");
-//         break;
-//       }
-//     }
-//
-//     std::cout << "i= " << i << "  mat= " << mat->GetName() << " icouple = " << icouple << " cut = " << cut << std::endl;
-//     std::cout << "i= " << i << "  mat= " << mat->GetName() << std::endl;
-    
-// //     std::cout << "material = " << mat->GetName() << std::endl;
-// //     std::cout << "computing dedxmin" << std::endl;
-//     double dedxionimin = std::numeric_limits<double>::max();
-// //     double emin = 0.;
-// //     double dedxioniminalt = std::numeric_limits<double>::max();
-// //     double eminalt = 0.;
-//     for(G4int j=0; j<=nbins; j++) {
-//       G4double e = aVector->Energy(j);
-//       const double dedxioni = ioni->ComputeDEDX(couple,part,e,e);
-// //       const double dedxionialt = ionialt->ComputeDEDX(couple,part,e,e);
-// //       std::cout << "e = " << e << " dedxioni = " << dedxioni << " dedxionialt = " << dedxionialt << std::endl;
-//       dedxionimin = std::min(dedxionimin, dedxioni);
-// //       if (dedxioni < dedxionimin) {
-// //         dedxionimin = dedxioni;
-// //         emin = e;
-// //       }
-// //       if (dedxionialt < dedxioniminalt) {
-// //         dedxioniminalt = dedxionialt;
-// //         eminalt = e;
-// //       }
-//     }
-    
-    
-//     std::cout << mat->GetName() << " dedxmin = " << dedxionimin << " emin = " << emin << " dedxioniminalt = " << dedxioniminalt << " eminalt = " << eminalt << std::endl;
-
-//     const double cut = 0.121694;
-    
     G4double effZ, effA;
     Geant4ePropagatorcvh::CalculateEffectiveZandA(mat, effZ, effA);
     G4double I = 16.*pow(effZ,0.9);
@@ -425,11 +395,9 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
     const double e1 = pow(I/pow(e2,f2),1./f1);
     const double r = 0.4;
 
-    for(G4int j=0; j<=nbins; j++) {
+    for(G4int j=0; j<=nbins; ++j) {
         
        G4double e = aVector->Energy(j);
-       
-       
        G4double pgev = e / GeV;
        G4double Etot = sqrt(pgev*pgev + mass*mass);
        G4double beta = pgev/Etot;
@@ -461,42 +429,14 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
        const double dedxratio = emed/emean;
        const double moderatio = emode/emean;
        const double alpha = 0.996;
-//        const double alpha = 0.999;
-       
+
        const double ealpha = I/(1. - alpha*emaxev/(emaxev + I));
-//        const double ealphamev = ealpha*1e-6;
 
-//        G4double dedx = std::min(ioni->ComputeDEDX(couple,part,e,e), dedxionimin) +
-// 	               pair->ComputeDEDX(couple,part,e,e) +
-// 	               brem->ComputeDEDX(couple,part,e,e);
-//        G4double dedx = ioni->ComputeDEDX(couple,part,e,cut) +
-// 	               pair->ComputeDEDX(couple,part,e,e) +
-// 	               brem->ComputeDEDX(couple,part,e,e);
-//        const double cut = i == 18 ? 0.121694 : e; // energy cut only for silicon for now
-//        const double cut = e;
-//        const double cut = 100.;
-//        const double cut = ealphamev;
-       const double dedxioni = e > 1000 ? ionialt->ComputeDEDX(couple,part,e,e) : ioni->ComputeDEDX(couple,part,e,e);
-//        const double dedxioni = ioni->ComputeDEDX(couple,part,e,cut);
-//        const double dedxioni = ioni->ComputeDEDX(couple,part,e,e);
-//        const double dedxioni = dedxratio*ioni->ComputeDEDX(couple,part,e,e);
-//        const double dedxioni = ioni->ComputeDEDX(couple,part,e,ealpha);
-       G4double dedx = ionOnly ? dedxioni : dedxioni + pair->ComputeDEDX(couple,part,e,e) +
-	               brem->ComputeDEDX(couple,part,e,e);
-//        G4double dedx = dedxioni;
-//        const double dedxionicut = ioni->ComputeDEDX(couple,part,e,cut);
-//        const double dedxioni = ioni->ComputeDEDX(couple,part,e,e);
-//        G4double dedx = ioni->ComputeDEDX(couple,part,e,e) +
-// 	               pair->ComputeDEDX(couple,part,e,e) +
-// 	               brem->ComputeDEDX(couple,part,e,e);
-//         std::cout << "material = " << mat->GetName() << " e = " << e << " cut = " << cut << " dedxioni = " << dedxioni << " dedx = " << dedx << std::endl;
-//         std::cout << "material = " << mat->GetName() << " e = " << e << " dedxratio = " << dedxratio << " moderatio = " << moderatio << " dedxioni = " << dedxioni << " dedx = " << dedx << std::endl;
+       const double dedxioni = e > 1000 ? ionialt->ComputeDEDXPerVolume(mat,part,e,e) : ioni->ComputeDEDXPerVolume(mat,part,e,e);
 
-
-//        std::cout << "e = " << e << " dedxionicut = " << dedxionicut << " dedxioni = " << dedxioni << " dedx = " << dedx << std::endl;
-
-//        dedx *= 1e-6;
-//        dedx *= 1e-12;
+       G4double dedx = ionOnly ? dedxioni : dedxioni +
+	               pair->ComputeDEDXPerVolume(mat,part,e,e) +
+	               brem->ComputeDEDXPerVolume(mat,part,e,e);
        aVector->PutValue(j,dedx);
        if(1<verbose) {
          G4cout << "j= " << j
@@ -516,11 +456,12 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 void 
-G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* part, 
+G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* part,
                         		   G4PhysicsTable* table)
 {
   G4BetheBlochModel* ioni = new G4BetheBlochModel();
   ioni->Initialise(part, cuts);
+  ioni->SetUseBaseMaterials(false);
 
   mass    = part->GetPDGMass();
   charge2 = 1.0;
@@ -539,12 +480,11 @@ G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* par
     const G4Material* mat = (*mtable)[i];
     if(1<verbose)
       G4cout << "i= " << i << "  mat= " << mat->GetName() << G4endl;
-    const G4MaterialCutsCouple* couple = couples[i];
     G4PhysicsVector* aVector = (*table)[i];
-    for(G4int j=0; j<=nbins; j++) {
+    for(G4int j=0; j<=nbins; ++j) {
         
        G4double e = aVector->Energy(j);
-       G4double dedx = ioni->ComputeDEDX(couple,part,e,e);
+       G4double dedx = ioni->ComputeDEDXPerVolume(mat,part,e,e);
        aVector->PutValue(j,dedx);
        if(1<verbose) {
          G4cout << "j= " << j
@@ -563,11 +503,12 @@ G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* par
 
 void 
 G4TablesForExtrapolatorCustom::ComputeTrasportXS(const G4ParticleDefinition* part, 
-					       G4PhysicsTable* table)
+					   G4PhysicsTable* table)
 {
   G4WentzelVIModel* msc = new G4WentzelVIModel();
   msc->SetPolarAngleLimit(CLHEP::pi);
   msc->Initialise(part, cuts);
+  msc->SetUseBaseMaterials(false);
 
   mass    = part->GetPDGMass();
   charge2 = 1.0;
@@ -588,7 +529,7 @@ G4TablesForExtrapolatorCustom::ComputeTrasportXS(const G4ParticleDefinition* par
     if(1<verbose)
       G4cout << "i= " << i << "  mat= " << mat->GetName() << G4endl;
     G4PhysicsVector* aVector = (*table)[i];
-    for(G4int j=0; j<=nbins; j++) {
+    for(G4int j=0; j<=nbins; ++j) {
         
        G4double e = aVector->Energy(j);
        G4double xs = msc->CrossSectionPerVolume(mat,part,e);
@@ -604,4 +545,5 @@ G4TablesForExtrapolatorCustom::ComputeTrasportXS(const G4ParticleDefinition* par
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
+
 
