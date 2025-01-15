@@ -198,8 +198,6 @@ void G4ErrorPhysicsListCustom::ConstructEM()
       pmanager->AddDiscreteProcess(new G4ComptonScattering());
       pmanager->AddDiscreteProcess(new G4PhotoElectricEffect());
 
-      //    } else if (particleName == "e-" || particleName == "e+"
-      //               || particleName == "mu+" || particleName == "mu-" ) {
     }
     else if(!particle->IsShortLived() && particle->GetPDGCharge() != 0)
     {
@@ -207,31 +205,6 @@ void G4ErrorPhysicsListCustom::ConstructEM()
       pmanager->AddDiscreteProcess(stepLengthLimitProcess, 2);
       pmanager->AddDiscreteProcess(magFieldLimitProcess, 3);
 
-      /*     } else if ((!particle->IsShortLived()) &&
-               (particle->GetPDGCharge() != 0.0) &&
-               (particle->GetParticleName() != "chargedgeantino")) {
-     // all others charged particles except geantino
-      //   G4VProcess* aMultipleScattering = new G4MultipleScattering();
-     G4VProcess* anIonisation        = new G4hIonisation();
-     ////G4VProcess*  theUserCuts = new G4UserSpecialCuts();
-
-     //
-     // add processes
-     pmanager->AddProcess(anIonisation);
-     //   pmanager->AddProcess(aMultipleScattering);
-     ////pmanager->AddProcess(theUserCuts);
-
-     //
-     // set ordering for AlongStepDoIt
-     //   pmanager->SetProcessOrdering(aMultipleScattering, idxAlongStep,1);
-     pmanager->SetProcessOrdering(anIonisation, idxAlongStep,1);
-
-     //
-     // set ordering for PostStepDoIt
-     //   pmanager->SetProcessOrdering(aMultipleScattering, idxPostStep,1);
-     pmanager->SetProcessOrdering(anIonisation, idxPostStep,1);
-     ////pmanager->SetProcessOrdering(theUserCuts,     idxPostStep,2);
-     */
     }
   }
 }
@@ -242,7 +215,5 @@ void G4ErrorPhysicsListCustom::SetCuts()
   //  " G4VUserPhysicsList::SetCutsWithDefault" method sets
   //   the default cut value or all particle types
   SetCutsWithDefault();
-  // if (verboseLevel>0)
-  //  DumpCutValuesTable();
 }
 

@@ -24,10 +24,6 @@
 #include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
 #include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
-// #include "DataFormats/SiStripDetId/interface/TIDDetId.h"
-// #include "DataFormats/SiStripDetId/interface/TIBDetId.h"
-// #include "DataFormats/SiStripDetId/interface/TOBDetId.h"
-// #include "DataFormats/SiStripDetId/interface/TECDetId.h"
 #include "DataFormats/GeometryCommonDetAlgo/interface/MeasurementPoint.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "Geometry/CommonTopologies/interface/StripTopology.h"
@@ -86,10 +82,6 @@
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
-// #include "../interface/OffsetMagneticField.h"
-// #include "../interface/ParmInfo.h"
-
-
 #include "TFile.h"
 #include "TTree.h"
 #include "TMath.h"
@@ -105,12 +97,6 @@
 using namespace Eigen;
 
 constexpr unsigned int max_n = 25; //!< In order to avoid use of dynamic memory
-
-//too big for stack :(
-// typedef Matrix<double, Dynamic, Dynamic, 0, 5*max_n, 5*max_n> GlobalParameterMatrix;
-// typedef Matrix<double, Dynamic, 1, 0, 5*max_n, 1> GlobalParameterVector;
-// typedef Matrix<double, Dynamic, Dynamic, 0, 5*max_n, 2*max_n> AlignmentJacobianMatrix;
-// typedef Matrix<double, Dynamic, Dynamic, 0, 5*max_n, 2*max_n> TransportJacobianMatrix;
 
 typedef Matrix<double, 5, 5> Matrix5d;
 typedef Matrix<double, 5, 1> Vector5d;
@@ -168,7 +154,7 @@ public:
 protected:
   
   virtual void beginStream(edm::StreamID) override;
-//   virtual void analyze(const edm::Event &, const edm::EventSetup &) override;
+
   virtual void endStream() override;
 
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
@@ -207,9 +193,6 @@ protected:
 
   Matrix<double, 10, 10> twoTrackPca2curvJacobianD(const Matrix<double, 7, 1> &state0, const Matrix<double, 7, 1> &state1, const MagneticField *field, double dBz0 = 0., double dBz1 = 0.) const;
 
-
-//   Matrix<double, 10, 1> twoTrackCart2pcaJacobianD(const Matrix<double, 7, 1> &state0, const Matrix<double, 7, 1> &state 1, const MagneticField *field, const reco::BeamSpot &bs, double dBz0 = 0., double dBz1 = 0.);
-
   Matrix<double, 2, 1> localPositionConvolutionD(const Matrix<double, 7, 1>& state, const Matrix<double, 5, 5> &curvcov, const GloballyPositioned<double> &surface) const;
 
   template <typename T>
@@ -229,12 +212,10 @@ protected:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<std::vector<Trajectory>> inputTraj_;
-//   edm::EDGetTokenT<std::vector<reco::GenParticle>> GenParticlesToken_;
   edm::EDGetTokenT<edm::View<reco::Candidate>> GenParticlesToken_;
   edm::EDGetTokenT<math::XYZPointF> genXyz0Token_;
   edm::EDGetTokenT<GenEventInfoProduct> genEventInfoToken_;
   edm::EDGetTokenT<std::vector<int>> genParticlesBarcodeToken_;
-//   edm::EDGetTokenT<TrajTrackAssociationCollection> inputTrack_;
   
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupSummaryToken_;
   
@@ -242,11 +223,9 @@ protected:
   edm::EDGetTokenT<reco::TrackCollection> inputTrackOrig_;
   edm::EDGetTokenT<std::vector<int> > inputIndices_;
   edm::EDGetTokenT<reco::BeamSpot> inputBs_;
-//   edm::EDGetTokenT<std::vector<PSimHit>> inputSimHits_;
   std::vector<edm::EDGetTokenT<std::vector<PSimHit>>> inputSimHits_;
   edm::EDGetTokenT<std::vector<SimTrack>> inputSimTracks_;
-  
-//   edm::EDGetTokenT<reco::MuonCollection> inputMuons_;
+
   edm::EDGetTokenT<edm::View<reco::Muon>> inputMuons_;
   edm::EDGetTokenT<int> inputGeometry_;
 
@@ -271,9 +250,6 @@ protected:
   
   TFile *fout = nullptr;
   TTree *tree = nullptr;
-//   TTree *runtree;
-//   TTree *gradtree;
-//   TTree *hesstree;
 
   float trackEta;
   float trackPhi;
@@ -506,8 +482,6 @@ protected:
   TH2D *hetaphi = nullptr;
 
   std::string outprefix;
-  
-//   bool filledRunTree_;
 
   edm::ESGetToken<GlobalTrackingGeometry, GlobalTrackingGeometryRecord> globalGeometryNominalToken_;
   edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> globalGeometryIdealToken_;

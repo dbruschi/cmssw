@@ -33,8 +33,6 @@ public:
   explicit ResidualGlobalCorrectionMakerTwoTrackG4e(const edm::ParameterSet &);
   ~ResidualGlobalCorrectionMakerTwoTrackG4e() {}
 
-//   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
-
 private:
 
   virtual void beginStream(edm::StreamID) override;
@@ -201,10 +199,6 @@ private:
   edm::ESGetToken<TransientTrackingRecHitBuilder, TransientRecHitRecord> ttrhToken_;
   edm::ESGetToken<Propagator, TrackingComponentsRecord> thePropagatorToken_;
   edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> TTBuilderToken_;
-  
-//   std::vector<float> hessv;
-  
-
   
 };
 
@@ -378,8 +372,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::beginStream(edm::StreamID streami
     tree->Branch("dinvmasssqconvval", &dinvmasssqconvval);
     tree->Branch("dmassconvval_cons0", &dmassconvval_cons0);
     tree->Branch("dinvmasssqconvval_cons0", &dinvmasssqconvval_cons0);
-
-//     tree->Branch("hessv", &hessv);
     
   }
 }
@@ -411,8 +403,7 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
   const MagneticField* field = thePropagator->magneticField();
   const Geant4ePropagatorcvh *g4prop = dynamic_cast<const Geant4ePropagatorcvh*>(thePropagator.product());
-  
-//   Handle<std::vector<reco::GenParticle>> genPartCollection;
+
   Handle<edm::View<reco::Candidate>> genPartCollection;
   Handle<math::XYZPointF> genXyz0;
   Handle<GenEventInfoProduct> genEventInfo;
@@ -465,10 +456,7 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
   VectorXd grad;
   MatrixXd hess;
   LDLT<MatrixXd> Cinvd;
-//   MatrixXd covstate;
   Matrix<double, 6, 6> covrefmom;
-//   FullPivLU<MatrixXd> Cinvd;
-//   ColPivHouseholderQR<MatrixXd> Cinvd;
   
   std::array<MatrixXd, 2> jacarr;
   
@@ -495,11 +483,8 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
       
       for (auto const &trigger : triggers_) {
         const std::string basename = trigger + "_v";
-//         std::cout << "basename = " << basename << std::endl;
         std::size_t idx = triggerNames.size();
         for (std::size_t itrig = 0; itrig < triggerNames.size(); ++itrig) {
-//           auto findres = triggerNames.triggerName(itrig).find(basename);
-//           std::cout << triggerNames.triggerName(itrig) << " findres = " << findres << std::endl;
           if (triggerNames.triggerName(itrig).find(basename) == 0) {
             idx = itrig;
             break;
@@ -508,36 +493,14 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
         triggerIdxs_.push_back(idx);
       }
       
-//       for (std::size_t itrig = 0; itrig < triggerIdxs_.size(); ++itrig) {
-//         std::cout << "itrig = " << itrig << ", idx = " << triggerIdxs_[itrig] << std::endl;
-//       }
-      
       triggerNamesId_ = triggerNames.parameterSetID();
     }
-    
-    
-    
-    
-    
+
     // set trigger decision bits
     for (std::size_t itrig = 0; itrig < triggerIdxs_.size(); ++itrig) {
       const std::size_t idx = triggerIdxs_[itrig];
-//       if (idx < triggerResults->size()) {
-//         std::cout << "itrig = " << itrig << " idx = " << idx << " accept = " << triggerResults->accept(idx) << std::endl;
-//       }
       triggerDecisions_[itrig] = idx < triggerResults->size() ? triggerResults->accept(idx) : false;
     }
-    
-    
-//     for (unsigned int i = 0; i < triggerNames.size(); ++i) {
-//       std::cout << i << " " << triggerNames.triggerName(i) << " accept = " << triggerResults->accept(i) << std::endl;
-//     }
-//     auto const idx = iEvent.triggerNames(*triggerResults).triggerIndex("HLT_Mu7p5_Track2_Jpsi");
-//     auto const idx = triggerNames.triggerIndex("HLT_Mu7p5_Track3p5_Jpsi_v4");
-//     auto const idx2 = triggerNames.triggerIndex("HLT_eawgawe");
-//     std::cout << "trigger names size = " << triggerNames.size() << std::endl;
-//     std::cout << "trigger index = " << idx << std::endl;
-//     std::cout << "trigger index2 = " << idx2 << std::endl;
   
   }
   
@@ -643,8 +606,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           }
         }
       }
-      
-//       std::cout << "massconstraintval = " << massconstraintval << std::endl;
     
       std::array<TransientTrackingRecHit::RecHitContainer, 2> hitsarr;
       
@@ -653,7 +614,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
         const reco::Track &track = id == 0 ? *itrack : *jtrack;
         auto &hits = hitsarr[id];
         hits.reserve(track.recHitsSize());
-      
       
         for (auto it = track.recHitsBegin(); it != track.recHitsEnd(); ++it) {
           if ((*it)->geographicalId().det() != DetId::Tracker) {
@@ -665,7 +625,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           
           // split matched invalid hits
           if (detglued != nullptr && !(*it)->isValid()) {
-//             bool order = detglued->stereoDet()->surface().position().mag() > detglued->monoDet()->surface().position().mag();
             
             const auto stereopos = detglued->stereoDet()->surface().position();
             const auto monopos = detglued->monoDet()->surface().position();
@@ -695,33 +654,13 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
                 const SiPixelCluster& cluster = *tkhit->cluster_pixel();
                 assert(pixhit != nullptr);
                 
-//                 std::cout << "getSplitClusterErrorX = " << cluster.getSplitClusterErrorX() << std::endl;
-                
-//                 const double jpsieta = dimu_kinfit->currentState().freeTrajectoryState().momentum().eta();
-//                 const double jpsipt = dimu_kinfit->currentState().freeTrajectoryState().momentum().perp();
-//                 if (std::abs(jpsieta)>2. && jpsipt>20. && it == track.recHitsBegin()) {
-//                   std::cout << "id = " << id << " detid = " << (*it)->geographicalId().rawId() << " minPixelRow = " << cluster.minPixelRow() << " maxPixelRow = " << cluster.maxPixelRow() << " minPixelCol = " << cluster.minPixelCol() << " maxPixelCol = " << cluster.maxPixelCol() << std::endl;
-//                 }
-                
                 hitquality = !pixhit->isOnEdge() && cluster.sizeX() > 1;
-//                 hitquality = !pixhit->isOnEdge() && cluster.sizeX() > 1 && pixhit->qBin() < 2;
-//                 hitquality = !pixhit->isOnEdge() && cluster.sizeX() > 1 && cluster.sizeY() > 1;
               }
               else {
                 assert(tkhit->cluster_strip().isNonnull());
-                const SiStripCluster& cluster = *tkhit->cluster_strip();
                 const StripTopology* striptopology = dynamic_cast<const StripTopology*>(&(detectorG->topology()));
                 assert(striptopology);
-                
-                const uint16_t firstStrip = cluster.firstStrip();
-                const uint16_t lastStrip = cluster.firstStrip() + cluster.amplitudes().size() - 1;
-                const bool isOnEdge = firstStrip == 0 || lastStrip == (striptopology->nstrips() - 1);
-                
-    //             if (isOnEdge) {
-    //               std::cout << "strip hit isOnEdge" << std::endl;
-    //             }
-                
-//                 hitquality = !isOnEdge;
+
                 hitquality = true;
               }
               
@@ -729,7 +668,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             else {
               hitquality = true;
             }
-
             
             if (hitquality) {
               hits.push_back((*it)->cloneForFit(*detectorG));              
@@ -745,8 +683,7 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
       unsigned int nvalid = 0;
       unsigned int nvalidpixel = 0;
       unsigned int nvalidalign2d = 0;
-      
-      
+
       std::array<unsigned int, 2> nhitsarr = {{ 0, 0 }};
       std::array<unsigned int, 2> nvalidarr = {{ 0, 0 }};
       std::array<unsigned int, 2> nvalidpixelarr = {{ 0, 0 }};
@@ -760,7 +697,7 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
       for (unsigned int id = 0; id < 2; ++id) {
         std::unordered_map<unsigned int, unsigned int> trackidmap;
         auto const &hits = hitsarr[id];
-//         layerStatesarr[id].reserve(hits.size());
+
         for (auto const &hit : hits) {
 
           const uint32_t gluedid = trackerTopology->glued(hit->geographicalId());
@@ -787,20 +724,11 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
               ++nvalidalign2d;
             }
             
-//             std::cout << hit->localPosition() << std::endl;
-            
-//             std::cout << "one hit:" << std:: endl;
-            
             // count matching hits from sim tracks
             std::unordered_set<unsigned int> trackidset;
             if (doSim_) {
               for (auto const& simhith : simHits) {
                 for (const PSimHit& simHit : *simhith) {
-//                   if (simHit.detUnitId() == hit->geographicalId()) {
-// //                     std::cout << "trackId = " << simHit.trackId() << " particleType = " << simHit.particleType() << "localpos = " << simHit.localPosition() << std::endl;
-//                   }
-                  
-//                   if (simHit.detUnitId() == hit->geographicalId()) {
                   if (simHit.detUnitId() == hit->geographicalId() && std::abs(simHit.particleType()) == 13) {
                     //only count each simtrack once on a given detid
                     if (trackidset.count(simHit.trackId())) {
@@ -860,44 +788,25 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
       if (nhitsarr[0] == 0 || nhitsarr[1] == 0) {
         continue;
-      }
-      
-//       if (mu0gen == nullptr || mu1gen == nullptr || mu0gen->eta()<2.2 || mu1gen->eta()<2.2) {
-//         continue;
-//       }
-      
+      }      
       
       AlgebraicSymMatrix55 null55;
       const CurvilinearTrajectoryError nullerr(null55);
 
-      
-//       const unsigned int nparsAlignment = 2*nvalid + nvalidalign2d;
-//       const unsigned int nparsAlignment = 6*nvalid;
       const unsigned int nparsAlignment = 5*nvalid + nvalidalign2d;
       const unsigned int nparsBfield = nhits;
       const unsigned int nparsEloss = nhits;
-//       const unsigned int nparsEloss = nhits + 2;
+
       const unsigned int npars = nparsAlignment + nparsBfield + nparsEloss;
       
       const unsigned int nstateparms = 10 + 5*nhits;
       const unsigned int nparmsfull = nstateparms + npars;
-      
-    
-      
+
       bool valid = true;
-      
-      
-      if (false) {
-        const GlobalPoint fieldrefpoint(itrack->vertex().x(), itrack->vertex().y(), itrack->vertex().z());
-        auto const fieldvalref = field->inTesla(fieldrefpoint);
-        std::cout << "refpos: " << fieldrefpoint << " bfield = " << fieldvalref << std::endl;
-      }
 
       const unsigned int nicons = doMassConstraint_ ? 2 : 1;
-//       const unsigned int nicons = doMassConstraint_ ? 3 : 1;
       
       for (unsigned int icons = 0; icons < nicons; ++icons) {
-        
 
         // common vertex fit
         std::vector<RefCountedKinematicParticle> parts;
@@ -910,7 +819,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
         
         RefCountedKinematicTree kinTree;
         if (icons > 0) {
-//           double kinconstraintval = 1./std::sqrt(massconstraintval);
           double kinconstraintval = massconstraintval;
           TwoTrackMassKinematicConstraint constraint(kinconstraintval);
           KinematicConstrainedVertexFitter vtxFitter;
@@ -922,7 +830,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
         }
         
         if (kinTree->isEmpty() || !kinTree->isConsistent()) {
-//           continue;
           std::cout << "Abort: invalid kinematic fit!\n";
           valid = false;
           break;
@@ -930,22 +837,8 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
         
         kinTree->movePointerToTheTop();
         RefCountedKinematicParticle dimu_kinfit = kinTree->currentParticle();
-        const double m0 = dimu_kinfit->currentState().mass();
-        
-        if (false) {
-          // debug output
-  //         kinTree->movePointerToTheTop();
-          
-  //         RefCountedKinematicParticle dimu_kinfit = kinTree->currentParticle();
-          RefCountedKinematicVertex dimu_vertex = kinTree->currentDecayVertex();
-          
-          std::cout << dimu_kinfit->currentState().mass() << std::endl;
-          std::cout << dimu_vertex->position() << std::endl;
-        }
         
         const std::vector<RefCountedKinematicParticle> outparts = kinTree->finalStateParticles();
-//         std::array<Matrix<double, 7, 1>, 2> refftsarr = {{ outparts[0]->currentState().freeTrajectoryState(),
-//                                                           outparts[1]->currentState().freeTrajectoryState() }};
               
         std::array<Matrix<double, 7, 1>, 2> refftsarr;
         
@@ -993,18 +886,8 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
         std::array<unsigned int, 2> trackstateidxarr;
         std::array<int, 2> muchargearr;
-        
-  //       constexpr unsigned int niters = 1;
-//         constexpr unsigned int niters = 3;
-//         constexpr unsigned int niters = 5;
-//         constexpr unsigned int niters = 10;
-        
-//         constexpr unsigned int niters = 1;
-        const unsigned int niters = (dogen && !dolocalupdate) ? 1 : 10;
 
-
-//         const unsigned int niters = icons == 0 ? 10 : 1;
-        
+        const unsigned int niters = (dogen && !dolocalupdate) ? 1 : 10;        
 
         for (unsigned int iiter=0; iiter<niters; ++iiter) {
           
@@ -1014,13 +897,7 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           globalidxv.clear();
           globalidxv.resize(npars, 0);
           
-//           nParms = npars;
-//           if (fillTrackTree_) {
-//             tree->SetBranchAddress("globalidxv", globalidxv.data());
-//           }
-          
           std::array<Matrix<double, 5, 7>, 2> FdFmrefarr;
-//           std::array<unsigned int, 2> trackstateidxarr;
           std::array<unsigned int, 2> trackparmidxarr;
           
           unsigned int trackstateidx = 10;
@@ -1036,11 +913,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
             refftsarr = twoTrackPca2cart(statepcaupd);
           }
-
-          
-  //         const bool firsthitshared = hitsarr[0][0]->sharesInput(&(*hitsarr[1][0]), TrackingRecHit::some);
-          
-  //         std::cout << "firsthitshared = " << firsthitshared << std::endl;
           
           double dbetavalref = 0.;
           std::array<double, 2> dbetavalrefarr;
@@ -1063,8 +935,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
           
           for (unsigned int id = 0; id < 2; ++id) {
-    //         FreeTrajectoryState refFts = outparts[id]->currentState().freeTrajectoryState();
-//             FreeTrajectoryState &refFts = refftsarr[id];
             
             Matrix<double, 7, 1> &refFts = refftsarr[id];
             auto &hits = hitsarr[id];
@@ -1086,7 +956,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
               
               constexpr unsigned int nlocalvtx = 3;
               constexpr unsigned int nlocal = nlocalvtx;
-              constexpr unsigned int localvtxidx = 0;
               constexpr unsigned int fullvtxidx = 7;
 
               const double sigb1 = bsH->BeamWidthX();
@@ -1097,7 +966,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
               const double x0 = bsH->x0();
               const double y0 = bsH->y0();
               const double z0 = bsH->z0();
-              
               
               // covariance matrix of luminous region in global coordinates
               // taken from https://github.com/cms-sw/cmssw/blob/abc1f17b230effd629c9565fb5d95e527abcb294/RecoVertex/BeamSpotProducer/src/FcnBeamSpotFitPV.cc#L63-L90
@@ -1138,17 +1006,13 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
               hessfull.block<nlocalvtx,nlocalvtx>(fullvtxidx, fullvtxidx) += hesslocal.topLeftCorner<nlocalvtx,nlocalvtx>();
               
             }
-            
-            
 
             for (unsigned int ihit = 0; ihit < hits.size(); ++ihit) {
-      //         std::cout << "ihit " << ihit << std::endl;
               auto const& hit = hits[ihit];
               
               const uint32_t gluedid = trackerTopology->glued(hit->det()->geographicalId());
               const bool isglued = gluedid != 0;
               const DetId parmdetid = isglued ? DetId(gluedid) : hit->geographicalId();
-              const GeomDet* parmDet = isglued ? globalGeometry->idToDet(parmdetid) : hit->det();
 
               const DetId aligndetid = alignGlued_ ? parmdetid : hit->geographicalId();
 
@@ -1205,13 +1069,10 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
               }
 
               // curvilinear to local jacobian
-              // const Matrix<double, 5, 5> &Hp = dolocalupdate ? curv2localJacobianAltelossD(updtsos, field, surface, dEdxlast, mmu, dbetaval) : Hm;
               Matrix<double, 5, 5> Hp = Hm;
               if (dolocalupdate) {
                 Hp = curv2localJacobianAltelossD(updtsos, field, surface, dEdxlast, mmu, dbetaval);
               }
-              
-              // const Matrix<double, 5, 5> &Q = dolocalupdate ? Hm*Qcurv*Hm.transpose() : Qcurv;
 
               Matrix<double, 5, 5> Q = Qcurv;
               if (dolocalupdate) {
@@ -1372,7 +1233,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
                   const double lxcor = localparms[3];
                   const double lycor = localparms[4];
 
-
                   const Topology &topology = preciseHit->det()->topology();
 
                   // undo deformation correction
@@ -1384,35 +1244,18 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
                   const double hitx = preciseHit->localPosition().x() - defcorr.x();
                   const double hity = preciseHit->localPosition().y() - defcorr.y();
-                  
-                  // const double hitx = preciseHit->localPosition().x() - 0.*defcorr.x();
-                  // const double hity = preciseHit->localPosition().y() - 0.*defcorr.y();
-
-                  double lyoffset = 0.;
-                  double hitphival = -99.;
-                  double localphival = -99.;
 
                   if (hit1d) {
-                    const ProxyStripTopology *proxytopology = dynamic_cast<const ProxyStripTopology*>(&(preciseHit->det()->topology()));
 
                     dy0[0] = hitx - lxcor;
                     dy0[1] = hity - lycor;
 
-                    const double striplength = proxytopology->stripLength();
-                    const double yerr2 = striplength*striplength/12.;
-
                     Vinv = Matrix<double, 2, 2>::Zero();
                     Vinv(0,0) = 1./preciseHit->localPositionError().xx();
-      //               Vinv(1,1) = 1./yerr2;
 
                     R = Matrix2d::Identity();
-
-
-      //               std::cout << "1d hit, original x = " << preciseHit->localPosition().x() << " y = " << preciseHit->localPosition().y() << " corrected x = " << hitx << " y = " << hity << std::endl;
                   }
                   else {
-                    // 2d hit
-      //               assert(align2d);
 
                     Matrix2d iV;
                     iV << preciseHit->localPositionError().xx(), preciseHit->localPositionError().xy(),
@@ -1429,8 +1272,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
                     else {
                       // transform to polar coordinates to end the madness
                       //TODO handle the module deformations consistently here (currently equivalent to dropping/undoing deformation correction)
-
-      //                   std::cout << "wedge\n" << std::endl;
 
                       const ProxyStripTopology *proxytopology = dynamic_cast<const ProxyStripTopology*>(&(preciseHit->det()->topology()));
 
@@ -1453,20 +1294,12 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
                       const double phierr2 = tt / std::pow(radialtopology->centreToIntersection(), 2);
 
-                      const double striplength = detHeight * std::sqrt(1. + std::pow( hitx/(rdir*hity + radius), 2) );
-
-                      const double rhoerr2 = striplength*striplength/12.;
-
-
-      //                   std::cout << "rhohit = " << rhohit << " rhobar = " << rhobar << " rhoerr2lin = " << rhoerr2lin << " rhoerr2 = " << rhoerr2 << std::endl;
-
                       // TODO apply (inverse) corrections for module deformations here? (take into account for jacobian?)
                       const double phistate = rdir*std::atan2(lxcor, rdir*lycor + radius);
                       const double rhostate = std::sqrt(lxcor*lxcor + std::pow(rdir*lycor + radius, 2));
 
                       Vinv = Matrix<double, 2, 2>::Zero();
                       Vinv(0, 0) = 1./phierr2;
-      //                   Vinv(1, 1) = 1./rhoerr2lin;
 
                       // jacobian from localx-localy to localphi-localrho
                       R = Matrix2d::Zero();
@@ -1487,22 +1320,17 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
                       dy0[0] = phihit - phistate;
                       dy0[1] = rhohit - rhostate;
 
-      //                 std::cout << "wedge hit, original x = " << preciseHit->localPosition().x() << " y = " << preciseHit->localPosition().y() << " corrected x = " << hitx << " y = " << hity << std::endl;
-
                     }
                   }
 
                   // alignment jacobian
                   Matrix<double, 2, 6> Aval = Matrix<double, 2, 6>::Zero();
 
-                  // const Matrix<double, 6, 1> &localparmsalign = alignGlued_ ? globalToLocal(updtsos, surfaceglued) : localparms;
-
                   Matrix<double, 6, 1> localparmsalign = localparms;
                   if (alignGlued_) {
                     localparmsalign = globalToLocal(updtsos, surfaceglued);
                   }
 
-                  const double localqopval = localparmsalign[0];
                   const double localdxdzval = localparmsalign[1];
                   const double localdydzval = localparmsalign[2];
                   const double localxval = localparmsalign[3];
@@ -1534,17 +1362,12 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
                   // dy/dtheta_z
                   Aval(1,5) = -localxvalorig;
 
-                  // const Matrix<double, 2, 6> &A = alignGlued_ ? Rglued*Aval : Aval;
-
                   Matrix<double, 2, 6> A = Aval;
                   if (alignGlued_) {
                     // glued alignment dofs only for out-of-plance
                     A.middleCols<3>(2) = Rglued*Aval.middleCols<3>(2);
                   }
 
-                  double thetaincidence = std::asin(1./std::sqrt(std::pow(localdxdzval,2) + std::pow(localdydzval,2) + 1.));
-
-      //             bool morehitquality = applyHitQuality_ ? thetaincidence > 0.25 : true;
                   bool morehitquality = true;
 
                   if (morehitquality) {
@@ -1615,8 +1438,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           if (!valid) {
             break;
           }
-          
-    //       MatrixXd massjac;
 
           const Matrix<double, 7, 1> &refFts0 = refftsarr[0];
           const Matrix<double, 7, 1> &refFts1 = refftsarr[1];    
@@ -1668,7 +1489,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             
             const Matrix<double, 1, 6> mjacalt = massJacobianAltD(refFts0, refFts1, mmu);
 
-//             const double dmsq0 = massval - massconstraintval;
             const double dmsq0 = massval - massconstraintval - dmassconv;
 
             const Matrix<double, 1, 6> &Fmass = mjacalt;
@@ -1693,28 +1513,10 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             }
             
           }
-
-         
-
-          
-          
-    //       std::cout << nhits << std::endl;
-    //       std::cout << nvalid << std::endl;
-    //       std::cout << nvalidalign2d << std::endl;
-    //       std::cout << nparsAlignment << std::endl;
-    //       std::cout << alignmentparmidx << std::endl;
-    // 
-    //       std::cout << nparsBfield << std::endl;
-    //       std::cout << nparsEloss << std::endl;
-    //       std::cout << parmidx << std::endl;
           
           assert(trackstateidx == nstateparms);
           assert(parmidx == (nparsBfield + nparsEloss));
           assert(alignmentparmidx == nparsAlignment);
-          
-    //       if (nhits != nvalid) {
-    //         continue;
-    //       }
 
           auto freezeparm = [&](unsigned int idx) {
             gradfull[idx] = 0.;
@@ -1734,110 +1536,22 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             freezeparm(6);
           }
           
-//           if (fitFromGenParms_) {
-//             freezeparm(2);
-//             for (unsigned int id = 0; id < 2; ++id) {
-//               freezeparm(trackstateidxarr[id] + 1);
-//             }
-//           }
-          
-  //         if (fitFromGenParms_) {
-  //           for (unsigned int id = 0; id < 2; ++id) {
-  //             for (unsigned int i=1; i<3; ++i) {
-  //               freezeparm(trackstateidxarr[id] + i);
-  //             }
-  //           }
-  //         }
-          
-          //now do the expensive calculations and fill outputs
-          
-          //symmetrize the matrix (previous block operations do not guarantee that the needed blocks are filled)
-          //TODO handle this more efficiently?
-    //       hessfull.triangularView<StrictlyLower>() = hessfull.triangularView<StrictlyUpper>().transpose();
-          
-    //       for (unsigned int i=0; i<3; ++i) {
-    //         gradfull[i] = 0.;
-    //         hessfull.row(i) *= 0.;
-    //         hessfull.col(i) *= 0.;
-    //         hessfull(i,i) = 1e6;
-    //       }
-          
-    //       for (auto trackstateidx : trackstateidxarr) {
-    //         for (unsigned int i = trackstateidx; i < (trackstateidx + 1); ++i) {
-    //           gradfull[i] = 0.;
-    //           hessfull.row(i) *= 0.;
-    //           hessfull.col(i) *= 0.;
-    //           hessfull(i,i) = 1e6;
-    //         }
-    //       }
-          
-    //       {
-    //         unsigned int i = trackstateidxarr[1];
-    //         gradfull[i] = 0.;
-    //         hessfull.row(i) *= 0.;
-    //         hessfull.col(i) *= 0.;
-    //         hessfull(i,i) = 1e6; 
-    //       }
-    //       
-          
-    //       std::cout << "gradfull:" << std::endl;
-    //       std::cout << gradfull << std::endl;
-    //       
-    //       std::cout << "gradfull.head(nstateparms):" << std::endl;
-    //       std::cout << gradfull.head(nstateparms) << std::endl;
-    // 
-    //       std::cout << "gradfull.tail(npars):" << std::endl;
-    //       std::cout << gradfull.tail(npars) << std::endl;
-    //       
-    //       std::cout << "hessfull.diagonal():" << std::endl;
-    //       std::cout << hessfull.diagonal() << std::endl;
-          
           auto const& dchisqdx = gradfull.head(nstateparms);
-          auto const& dchisqdparms = gradfull.tail(npars);
           
           auto const& d2chisqdx2 = hessfull.topLeftCorner(nstateparms, nstateparms);
-          auto const& d2chisqdxdparms = hessfull.topRightCorner(nstateparms, npars);
-          auto const& d2chisqdparms2 = hessfull.bottomRightCorner(npars, npars);
-          
 
-          
           Cinvd.compute(d2chisqdx2);
           
           dxfull = -Cinvd.solve(dchisqdx);
-//           dxdparms = -Cinvd.solve(d2chisqdxdparms).transpose();
-          
-          
-//           std::cout << "dxfull vtx: " << dxfull.head<3>() << std::endl;
-          
-  //         dxdparms = -Cinvd.solve(d2chisqdxdparms).transpose();
-          
-      //     if (debugprintout_) {
-      //       std::cout << "dxrefdparms" << std::endl;
-      //       std::cout << dxdparms.leftCols<5>() << std::endl;
-      //     }
-          
-  //         grad = dchisqdparms + dxdparms*dchisqdx;
-          //TODO check the simplification
-      //     hess = d2chisqdparms2 + 2.*dxdparms*d2chisqdxdparms + dxdparms*d2chisqdx2*dxdparms.transpose();
-  //         hess = d2chisqdparms2 + dxdparms*d2chisqdxdparms;
           
           const Matrix<double, 1, 1> deltachisq = dchisqdx.transpose()*dxfull + 0.5*dxfull.transpose()*d2chisqdx2*dxfull;
-          
-//           std::cout << "iiter = " << iiter << ", deltachisq = " << deltachisq[0] << std::endl;
-//   //         
-//           SelfAdjointEigenSolver<MatrixXd> es(d2chisqdx2, EigenvaluesOnly);
-//           const double condition = es.eigenvalues()[nstateparms-1]/es.eigenvalues()[0];
-//           std::cout << "eigenvalues:" << std::endl;
-//           std::cout << es.eigenvalues().transpose() << std::endl;
-//           std::cout << "condition: " << condition << std::endl;
           
           chisqval = chisq0val + deltachisq[0];
           
           deltachisqval = chisq0val + deltachisq[0] - chisqvalold;
           
           chisqvalold = chisq0val + deltachisq[0];
-          
-//           ndof = 5*nhits + nvalid + nvalidalign2d - nstateparms;
+
           ndof = 5*nhits + nvalid + nvalidpixel - nstateparms;
           
           if (bsConstraint_) {
@@ -1851,65 +1565,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           if (icons == 1) {
             ++ndof;
           }
-          
-//           std::cout << "icons = " << icons << " iiter =" << iiter << " dx = " << refftsarr[0].position() - refftsarr[1].position() << std::endl;
-          
-    //       std::cout << "dchisqdparms.head<6>()" << std::endl;
-    //       std::cout << dchisqdparms.head<6>() << std::endl;
-    //       
-    //       std::cout << "grad.head<6>()" << std::endl;
-    //       std::cout << grad.head<6>() << std::endl;
-    //       
-    //       std::cout << "d2chisqdparms2.topLeftCorner<6, 6>():" << std::endl;
-    //       std::cout << d2chisqdparms2.topLeftCorner<6, 6>() << std::endl;
-    //       std::cout << "hess.topLeftCorner<6, 6>():" << std::endl;
-    //       std::cout << hess.topLeftCorner<6, 6>() << std::endl;
-    //       
-    //       std::cout << "dchisqdparms.segment<6>(nparsBfield+nparsEloss)" << std::endl;
-    //       std::cout << dchisqdparms.segment<6>(nparsBfield+nparsEloss) << std::endl;
-    //       
-    //       std::cout << "grad.segment<6>(nparsBfield+nparsEloss)" << std::endl;
-    //       std::cout << grad.segment<6>(nparsBfield+nparsEloss) << std::endl;
-    //       
-    //       std::cout << "d2chisqdparms2.block<6, 6>(nparsBfield+nparsEloss, nparsBfield+nparsEloss):" << std::endl;
-    //       std::cout << d2chisqdparms2.block<6, 6>(nparsBfield+nparsEloss, nparsBfield+nparsEloss) << std::endl;
-    //       std::cout << "hess.block<6, 6>(nparsBfield+nparsEloss, nparsBfield+nparsEloss):" << std::endl;
-    //       std::cout << hess.block<6, 6>(nparsBfield+nparsEloss, nparsBfield+nparsEloss) << std::endl;
-    // //       
-    //       
-    //       std::cout << "d2chisqdparms2.block<6, 6>(trackparmidxarr[1], trackparmidxarr[1]):" << std::endl;
-    //       std::cout << d2chisqdparms2.block<6, 6>(trackparmidxarr[1], trackparmidxarr[1]) << std::endl;
-    //       std::cout << "hess.block<6, 6>(trackparmidxarr[1], trackparmidxarr[1]):" << std::endl;
-    //       std::cout << hess.block<6, 6>(trackparmidxarr[1], trackparmidxarr[1]) << std::endl;
-    //       
-    //       std::cout << "d2chisqdparms2.bottomRightCorner<6, 6>():" << std::endl;
-    //       std::cout << d2chisqdparms2.bottomRightCorner<6, 6>() << std::endl;
-    //       std::cout << "hess.bottomRightCorner<6, 6>():" << std::endl;
-    //       std::cout << hess.bottomRightCorner<6, 6>() << std::endl;
-
-    //       const double 
-    // //       const double corxi0plusminus = hess(1, trackparmidxarr[1] + 1)/std::sqrt(hess(1,1)*hess(trackparmidxarr[1] + 1, trackparmidxarr[1] + 1));
-    // //       const double corxi1plusminus = hess(3, trackparmidxarr[1] + 3)/std::sqrt(hess(3,3)*hess(trackparmidxarr[1] + 3, trackparmidxarr[1] + 3));
-    //       
-    //       const double cor01plus = hess(1, 3)/std::sqrt(hess(1, 1)*hess(3, 3));
-    // //       const double cor01minus = hess(trackparmidxarr[1] + 1, trackparmidxarr[1] + 3)/std::sqrt(hess(trackparmidxarr[1] + 1, trackparmidxarr[1] + 1)*hess(trackparmidxarr[1] + 3, trackparmidxarr[1] + 3));
-    // 
-    //       const double cor12plus = hess(3, 5)/std::sqrt(hess(3, 3)*hess(5, 5));
-    // //       const double cor12minus = hess(trackparmidxarr[1] + 3, trackparmidxarr[1] + 5)/std::sqrt(hess(trackparmidxarr[1] + 3, trackparmidxarr[1] + 3)*hess(trackparmidxarr[1] + 5, trackparmidxarr[1] + 5));
-    //       
-    // //       std::cout << "corxi0plusminus = " << corxi0plusminus << std::endl;
-    // //       std::cout << "corxi1plusminus = " << corxi1plusminus << std::endl;
-    //       std::cout << "cor01plus = " << cor01plus << std::endl;
-    // //       std::cout << "cor01minus = " << cor01minus << std::endl;
-    //       std::cout << "cor12plus = " << cor12plus << std::endl;
-    // //       std::cout << "cor12minus = " << cor12minus << std::endl;
-          
-    //       std::cout << "hess(1, 1)" << std::endl;
-    //       std::cout << hess(1, 1) << std::endl;
-    //       std::cout << "hess(trackparmidxarr[1] + 1, trackparmidxarr[1] + 1)" << std::endl;
-    //       std::cout << hess(trackparmidxarr[1] + 1, trackparmidxarr[1] + 1) << std::endl;
-    //       std::cout << "hess(1, trackparmidxarr[1] + 1)" << std::endl;
-    //       std::cout << hess(1, trackparmidxarr[1] + 1) << std::endl;
           
           // compute final kinematics
           
@@ -1931,8 +1586,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           const Matrix<double, 10, 1> statepca = twoTrackCart2pca(refftsarr[0], refftsarr[1]);
           const Matrix<double, 10, 1> statepcaupd = statepca + dxfull.head<10>();
 
-//           std::cout << "statepcaupd d = " << statepcaupd[6] << std::endl;
-
           const bool firstplus = statepcaupd[0] > 0.;
 
           if (icons == 0) {
@@ -1952,13 +1605,9 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
           std::array<ROOT::Math::PxPyPzMVector, 2> muarr;
           std::array<Vector3d, 2> mucurvarr;
-//           std::array<int, 2> muchargearr;
-          
-    //       std::cout << dimu_vertex->position() << std::endl;
           
           // apply the GBL fit results to the muon kinematics
           for (unsigned int id = 0; id < 2; ++id) {
-            const Matrix<double, 7, 1> &refFts = refftsarr[id];
             const unsigned int trackstateidx = 3*id;
 
             const double qbpupd = statepcaupd[trackstateidx];
@@ -1977,57 +1626,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             
             auto &refParms = mucurvarr[id];
             refParms << qbpupd, lamupd, phiupd;
-            
-    //         auto const &refFts = outparts[id]->currentState().freeTrajectoryState();
-//             auto const &refFts = refftsarr[id];
-//   //           auto const &jac = jacarr[id];
-//             unsigned int trackstateidx = trackstateidxarr[id];
-//             
-// //             JacobianCurvilinearToCartesian curv2cart(refFts.parameters());
-// //             const AlgebraicMatrix65& jac = curv2cart.jacobian();
-// //             const Matrix<double, 6, 5> jac = curv2cartJacobianAlt(refFts);
-//             const AlgebraicVector6 glob = refFts.parameters().vector();
-//             
-//             const Matrix<double, 3, 1> posupd = Map<const Matrix<double, 6, 1>>(glob.Array()).head<3>() + dxfull.head<3>();
-//             
-// //             const Matrix<double, 3, 1> momupd = Map<const Matrix<double, 6, 1>>(glob.Array()).tail<3>() + Map<const Matrix<double, 6, 5, RowMajor>>(jac.Array()).bottomLeftCorner<3, 3>()*dxfull.segment<3>(trackstateidx);
-// //             const Matrix<double, 3, 1> momupd = Map<const Matrix<double, 6, 1>>(glob.Array()).tail<3>() + jac.bottomLeftCorner<3, 3>()*dxfull.segment<3>(trackstateidx);
-//             
-//             const GlobalPoint pos(posupd[0], posupd[1], posupd[2]);
-// //             const GlobalVector mom(momupd[0], momupd[1], momupd[2]);
-// //             const double charge = std::copysign(1., refFts.charge()/refFts.momentum().mag() + dxfull[trackstateidx]);
-//       //         std::cout << "before update: reffts:" << std::endl;
-//       //         std::cout << refFts.parameters().vector() << std::endl;
-//       //         std::cout << "charge " << refFts.charge() << std::endl;
-//   //           updFts = FreeTrajectoryState(pos, mom, charge, field);
-// 
-//             
-//             const CurvilinearTrajectoryParameters curv(refFts.position(), refFts.momentum(), refFts.charge());
-//               
-//             const double qbpupd = curv.Qbp() + dxfull(trackstateidx);
-//             const double lamupd = curv.lambda() + dxfull(trackstateidx + 1);
-//             const double phiupd = curv.phi() + dxfull(trackstateidx + 2);
-//             
-//             const double charge = std::copysign(1., qbpupd);
-//             const double pupd = std::abs(1./qbpupd);
-//             
-//             const double pxupd = pupd*std::cos(lamupd)*std::cos(phiupd);
-//             const double pyupd = pupd*std::cos(lamupd)*std::sin(phiupd);
-//             const double pzupd = pupd*std::sin(lamupd);
-//             
-//             const GlobalVector mom(pxupd, pyupd, pzupd);
-//             
-//             muarr[id] = ROOT::Math::PxPyPzMVector(pxupd, pyupd, pzupd, mmu);
-//             muchargearr[id] = charge;
-//             
-// //             std::cout << "delta eta final = " << muarr[id].eta() - refFts.momentum().eta() << std::endl;
-//                     
-//             auto &refParms = mucurvarr[id];
-//   //           CurvilinearTrajectoryParameters curvparms(refFts.position(), refFts.momentum(), refFts.charge());
-//             CurvilinearTrajectoryParameters curvparms(pos, mom, charge);
-//   //           refParms << curvparms.Qbp(), curvparms.lambda(), curvparms.phi(), curvparms.xT(), curvparms.yT();
-//             refParms << curvparms.Qbp(), curvparms.lambda(), curvparms.phi();
-//   //           refParms += dxcurv;
 
           }
           
@@ -2054,9 +1652,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           Jpsitrk_eta = jpsitrkmom.eta();
           Jpsitrk_phi = jpsitrkmom.phi();
           Jpsitrk_mass = jpsitrkmom.mass();
-          
-          
-          
           
           if (icons == 0) {
           
@@ -2092,81 +1687,23 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             Muminuskincons_pt = outparts[idxminus]->currentState().globalMomentum().perp();
             Muminuskincons_eta = outparts[idxminus]->currentState().globalMomentum().eta();
             Muminuskincons_phi = outparts[idxminus]->currentState().globalMomentum().phi();
-          }
-          
-//           std::cout << "Muplus pt, eta, phi = " << Muplus_pt << ", " << Muplus_eta << ", " << Muplus_phi << std::endl;
-//           std::cout << "Muminus pt, eta, phi = " << Muminus_pt << ", " << Muminus_eta << ", " << Muminus_phi << std::endl;
-          
+          }          
           
           MatrixXd covstate =  2.*Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms));
 
           covrefmom  = covstate.topLeftCorner<6, 6>();
-
-          
-//           Matrix<double, 6, 6> covrefmom;
-//           covrefmom  = Matrix<double, 6, 6>::Zero();
-//
-//           constexpr std::array<unsigned int, 2> localidxs = {{ 0, 3 }};
-//           const std::array<unsigned int, 2> globalidxs = {{ trackstateidxarr[0], trackstateidxarr[1] }};
-//
-//           for (unsigned int iidx = 0; iidx < localidxs.size(); ++iidx) {
-//             for (unsigned int jidx = 0; jidx < localidxs.size(); ++jidx) {
-//               covrefmom.block<3, 3>(localidxs[iidx], localidxs[jidx]) = covstate.block<3, 3>(globalidxs[iidx], globalidxs[jidx]);
-//             }
-//           }
           
           if (icons == 0) {
           
             Map<Matrix<float, 3, 1>>(Muplus_refParms.data()) = mucurvarr[idxplus].cast<float>();
-            Map<Matrix<float, 3, 1>>(Muminus_refParms.data()) = mucurvarr[idxminus].cast<float>();
-            
-    //         std::cout << "nstateparms = " << nstateparms << std::endl;
-    //         std::cout << "dxdparms " << dxdparms.rows() << " " << dxdparms.cols() << std::endl;
-            
-//             Muplus_jacRef.resize(3*npars);
-//             Map<Matrix<float, 3, Dynamic, RowMajor>>(Muplus_jacRef.data(), 3, npars) = dxdparms.block(0, trackstateidxarr[idxplus], npars, 3).transpose().cast<float>();
-//             
-//             Muminus_jacRef.resize(3*npars);
-//             Map<Matrix<float, 3, Dynamic, RowMajor>>(Muminus_jacRef.data(), 3, npars) = dxdparms.block(0, trackstateidxarr[idxminus], npars, 3).transpose().cast<float>();
-            
-            
-//             MatrixXd covstate =  2.*Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms));
-            
-//             Matrix<double, 6, 6> covrefmom;
-//             
-//             constexpr std::array<unsigned int, 2> localidxs = {{ 0, 3 }};
-//             const std::array<unsigned int, 2> globalidxs = {{ trackstateidxarr[0], trackstateidxarr[1] }};
-//             
-//             for (unsigned int iidx = 0; iidx < localidxs.size(); ++iidx) {
-//               for (unsigned int jidx = 0; jidx < localidxs.size(); ++jidx) {
-//                 covrefmom.block<3, 3>(localidxs[iidx], localidxs[jidx]) = covstate.block<3, 3>(globalidxs[iidx], globalidxs[jidx]);
-//               } 
-//             }
-            
-            
+            Map<Matrix<float, 3, 1>>(Muminus_refParms.data()) = mucurvarr[idxminus].cast<float>();            
             
             const Matrix<double, 1, 6> mjacalt = massJacobianAltD(refftsarr[0], refftsarr[1], mmu);
 
             
             Jpsi_sigmamass = std::sqrt((mjacalt*covrefmom*mjacalt.transpose())[0]);
-            
-//             std::cout << "covrefmom" << std::endl;
-//             std::cout << covrefmom << std::endl;
-//             std::cout << "Jpsi_sigmamass = " << Jpsi_sigmamass << std::endl;
           
           }
-  //         
-  //         (jacarr[idxplus].topLeftCorner(5, nstateparms)*dxdparms.transpose() + jacarr[idxplus].topRightCorner(5, npars)).cast<float>();
-  //         
-  //         Muminus_jacRef.resize(3*npars);
-  //         Map<Matrix<float, 3, Dynamic, RowMajor>>(Muminus_jacRef.data(), 3, npars) = (jacarr[idxminus].topLeftCorner(5, nstateparms)*dxdparms.transpose() + jacarr[idxminus].topRightCorner(5, npars)).cast<float>();
-          
-          //TODO fix this
-  //         Muplus_jacRef.resize(5*npars);
-  //         Map<Matrix<float, 5, Dynamic, RowMajor>>(Muplus_jacRef.data(), 5, npars) = (jacarr[idxplus].topLeftCorner(5, nstateparms)*dxdparms.transpose() + jacarr[idxplus].topRightCorner(5, npars)).cast<float>();
-  //         
-  //         Muminus_jacRef.resize(5*npars);
-  //         Map<Matrix<float, 5, Dynamic, RowMajor>>(Muminus_jacRef.data(), 5, npars) = (jacarr[idxminus].topLeftCorner(5, nstateparms)*dxdparms.transpose() + jacarr[idxminus].topRightCorner(5, npars)).cast<float>();
           
           auto const jpsimom = muarr[0] + muarr[1];
           
@@ -2241,14 +1778,12 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
                 continue;
               }
 
-//               float dRplus = deltaR(genpart.phi(), muarr[idxplus].phi(), genpart.eta(), muarr[idxplus].eta());
               const double dRplus = deltaR(genpart, muarr[idxplus]);
               if (dRplus < drminplus && genpart.charge() > 0) {
                 muplusgen = &genpart;
                 drminplus = dRplus;
               }
 
-//               float dRminus = deltaR(genpart.phi(), muarr[idxminus].phi(), genpart.eta(), muarr[idxminus].eta());
               const double dRminus = deltaR(genpart, muarr[idxminus]);
               if (dRminus < drminminus && genpart.charge() < 0) {
                 muminusgen = &genpart;
@@ -2366,11 +1901,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             }
 
           }
-          
-          
-      //     const Vector5d dxRef = dxfull.head<5>();
-      //     const Matrix5d Cinner = Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms)).topLeftCorner<5,5>();
-
 
           niter = iiter + 1;
           edmval = -deltachisq[0];
@@ -2395,47 +1925,12 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
             niter_cons0 = niter;
           }
           
-//           std::cout << "icons = " << icons << " iiter = " << iiter << " edmval = " << edmval << " deltachisqval = " << deltachisqval << " chisqval = " << chisqval << std::endl;
-//           std::cout << "dxvtx" << std::endl;
-          
-//           std::cout << "pt0 = " << refftsarr[0].momentum().perp() << " eta0 = " << refftsarr[0].momentum().eta() << " charge0 = " << refftsarr[0].charge() <<  " pt1 = " << refftsarr[1].momentum().perp() << " eta1 = " << refftsarr[1].momentum().eta() << " charge1 = " << refftsarr[1].charge() << std::endl;
-//           std::cout << "dxref" << std::endl;
-          
-//           std::cout << "dxvtx:" << std::endl;
-//           std::cout << dxfull.head<3>() << std::endl;
-//           std::cout << "dxmom0" << std::endl;
-//           std::cout << dxfull.segment<3>(trackstateidxarr[0]) << std::endl;
-//           std::cout << "dxmom1" << std::endl;
-//           std::cout << dxfull.segment<3>(trackstateidxarr[1]) << std::endl;
-//           std::cout << "qop0 = " << refftsarr[0].signedInverseMomentum() + dxfull[trackstateidxarr[0]] << std::endl;
-//           std::cout << "qop1 = " << refftsarr[1].signedInverseMomentum() + dxfull[trackstateidxarr[1]] << std::endl;
-          
-          
-//           std::cout << "dx0" << std::endl;
-//           std::cout << dxfull.segment(trackstateidxarr[0], trackstateidxarr[1]-trackstateidxarr[0]) << std::endl;
-//           std::cout << "dx1" << std::endl;
-//           std::cout << dxfull.segment(trackstateidxarr[1], nstateparms - trackstateidxarr[1]) << std::endl;
-//           std::cout << dxfull.segment<3>(trackstateidxarr[0]) << std::endl;
-//           std::cout << dxfull.segment<3>(trackstateidxarr[1]) << std::endl;
-         
-//           if (std::abs(deltachisqval)<1e-2) {
-//             break;
-//           }
-          
-//           if (iiter > 0 && edmval < 1e-5) {
-//             break;
-//           }
-          
           if (iiter > 0 && dolocalupdate && edmval < 1e-5) {
             break;
           }
           else if (iiter > 0 && !dolocalupdate && edmvalref < 1e-5) {
             break;
           }
-          
-//           if (iiter > 1 && std::abs(deltachisq[0])<1e-3) {
-//             break;
-//           }
       
         }
       
@@ -2443,10 +1938,8 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           break;
         }
 
-        auto const& dchisqdx = gradfull.head(nstateparms);
         auto const& dchisqdparms = gradfull.tail(npars);
 
-        auto const& d2chisqdx2 = hessfull.topLeftCorner(nstateparms, nstateparms);
         auto const& d2chisqdxdparms = hessfull.topRightCorner(nstateparms, npars);
         auto const& d2chisqdparms2 = hessfull.bottomRightCorner(npars, npars);
 
@@ -2481,7 +1974,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
         dxdparms = -Cinvd.solve(d2chisqdxdparmsfinal).transpose();
 
-    //     grad = dchisqdparmsfinal + dxdparms*dchisqdx;
         grad = dchisqdparmsfinal + d2chisqdxdparmsfinal.transpose()*dxfull;
         hess = d2chisqdparms2final + dxdparms*d2chisqdxdparmsfinal;
 
@@ -2503,14 +1995,6 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           Jpsi_jacMass.resize(nparsfinal);
           Map<Matrix<float, 1, Dynamic, RowMajor>>(Jpsi_jacMass.data(), 1, nparsfinal) = (mjacalt*dxdparms.leftCols<6>().transpose()).cast<float>();
 
-
-          if (false) {
-            std::cout << "Muplus pt eta phi = " << Muplus_pt << "  " << Muplus_eta << " " << Muplus_phi << std::endl;
-            std::cout << "Muminus pt eta phi = " << Muminus_pt << "  " << Muminus_eta << " " << Muminus_phi << std::endl;
-
-            std::cout << "Muplus_jacref:\n" << Map<Matrix<float, 3, Dynamic, RowMajor>>(Muplus_jacRef.data(), 3, nparsfinal) << std::endl;
-            std::cout << "Muminus_jacref:\n" << Map<Matrix<float, 3, Dynamic, RowMajor>>(Muminus_jacRef.data(), 3, nparsfinal) << std::endl;
-          }
         }
 
       }
@@ -2518,87 +2002,8 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
       if (!valid) {
         continue;
       }
-      
-//       std::cout << "gradfull rows cols " << gradfull.rows() << "  " << gradfull.cols() << "nstateparms = " << nstateparms << std::endl;
-    
-//       auto const& dchisqdx = gradfull.head(nstateparms);
-//       auto const& dchisqdparms = gradfull.tail(npars);
-//
-//       auto const& d2chisqdx2 = hessfull.topLeftCorner(nstateparms, nstateparms);
-//       auto const& d2chisqdxdparms = hessfull.topRightCorner(nstateparms, npars);
-//       auto const& d2chisqdparms2 = hessfull.bottomRightCorner(npars, npars);
-//
-//       std::unordered_map<unsigned int, unsigned int> idxmap;
-//
-//       globalidxvfinal.clear();
-//       globalidxvfinal.reserve(npars);
-//       idxmap.reserve(npars);
-//
-//       for (unsigned int idx : globalidxv) {
-//         if (!idxmap.count(idx)) {
-//           idxmap[idx] = globalidxvfinal.size();
-//           globalidxvfinal.push_back(idx);
-//         }
-//       }
-//
+
       const unsigned int nparsfinal = globalidxvfinal.size();
-//
-//       VectorXd dchisqdparmsfinal = VectorXd::Zero(nparsfinal);
-//       MatrixXd d2chisqdxdparmsfinal = MatrixXd::Zero(nstateparms, nparsfinal);
-//       MatrixXd d2chisqdparms2final = MatrixXd::Zero(nparsfinal, nparsfinal);
-//
-//       for (unsigned int i = 0; i < npars; ++i) {
-//         const unsigned int iidx = idxmap.at(globalidxv[i]);
-//         dchisqdparmsfinal[iidx] += dchisqdparms[i];
-//         d2chisqdxdparmsfinal.col(iidx) += d2chisqdxdparms.col(i);
-//         for (unsigned int j = 0; j < npars; ++j) {
-//           const unsigned int jidx = idxmap.at(globalidxv[j]);
-//           d2chisqdparms2final(iidx, jidx) += d2chisqdparms2(i, j);
-//         }
-//       }
-//
-//       dxdparms = -Cinvd.solve(d2chisqdxdparmsfinal).transpose();
-//
-//   //     grad = dchisqdparmsfinal + dxdparms*dchisqdx;
-//       grad = dchisqdparmsfinal + d2chisqdxdparmsfinal.transpose()*dxfull;
-//       hess = d2chisqdparms2final + dxdparms*d2chisqdxdparmsfinal;
-      
-  //     if (debugprintout_) {
-  //       std::cout << "dxrefdparms" << std::endl;
-  //       std::cout << dxdparms.leftCols<5>() << std::endl;
-  //     }
-      
-//       grad = dchisqdparms + dxdparms*dchisqdx;
-      
-//       std::cout << "dchisqdparms" << std::endl;
-//       std::cout << dchisqdparms.transpose() << std::endl;
-//       std::cout << "dxdparms*dchisqdx" << std::endl;
-//       std::cout << (dxdparms*dchisqdx).transpose() << std::endl;
-//       std::cout << "grad" << std::endl;
-//       std::cout << grad.transpose() << std::endl;
-      //TODO check the simplification
-  //     hess = d2chisqdparms2 + 2.*dxdparms*d2chisqdxdparms + dxdparms*d2chisqdx2*dxdparms.transpose();
-//       hess = d2chisqdparms2 + dxdparms*d2chisqdxdparms;
-  
-//       for (unsigned int iparm = 0; iparm < npars; ++iparm) {
-//         if (detidparmsrev[globalidxv[iparm]].first != 7) {
-//           hess.row(iparm) *= 0.;
-//           hess.col(iparm) *= 0.;
-//           hess(iparm, iparm) = 1e6;
-//         }
-//       }
-      
-//       SelfAdjointEigenSolver<MatrixXd> es(hess, EigenvaluesOnly);
-//       const double condition = es.eigenvalues()[nstateparms-1]/es.eigenvalues()[0];
-//       std::cout << "hess eigenvalues:" << std::endl;
-//       std::cout << es.eigenvalues().transpose() << std::endl;
-//       std::cout << "condition: " << condition << std::endl;
-      
-//       std::cout << "hess diagonal:" << std::endl;
-//       std::cout << hess.diagonal().transpose() << std::endl;
-//       
-//       assert(es.eigenvalues()[0] > -1e-5);
-//       assert(hess.diagonal().minCoeff() > 0.);
       
       nParms = nparsfinal;
 
@@ -2623,21 +2028,16 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
           gradmax = absval;
         }      
       }
-      
-      
+
       hessmax = 0.;
       for (unsigned int i=0; i<nparsfinal; ++i) {
         for (unsigned int j=i; j<nparsfinal; ++j) {
-          const unsigned int iidx = globalidxvfinal[i];
-          const unsigned int jidx = globalidxvfinal[j];
           
           const float absval = std::abs(hess(i,j));
           if (absval>hessmax) {
             hessmax = absval;
           }
-          
         }
-        
       }
         
       //fill packed hessian and indices
@@ -2660,76 +2060,9 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
         packedidx += segmentsize;
       }
       
-      
-//       assert(globalidxvfinal.size() == (2*Muplus_nhits + 2*Muminus_nhits + 2*Muplus_nvalid + 2*Muminus_nvalid + Muplus_nvalidpixel + Muminus_nvalidpixel));
-
-//       hessv.resize(nparsfinal*nparsfinal);
-//       Map<Matrix<float, Dynamic, Dynamic, RowMajor>>(hessv.data(), nparsfinal, nparsfinal) = hess.cast<float>();
-      
       if (fillTrackTree_) {
         tree->Fill();
-      }
-      
-
-      
-
-      
-//       const Matrix3d covvtx = Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms)).topLeftCorner<3,3>();
-//       
-//       const double covqop0 = Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms))(trackstateidxarr[0], trackstateidxarr[0]);
-//       const double covqop1 = Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms))(trackstateidxarr[1], trackstateidxarr[1]);
-//       
-//       const double covqop0kin = outparts[0]->currentState().freeTrajectoryState().curvilinearError().matrix()(0,0);
-//       const double covqop1kin = outparts[1]->currentState().freeTrajectoryState().curvilinearError().matrix()(0,0);
-//       
-// //       Matrix<double, 1, 1> covmass = 2.*massjac*Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms))*massjac.transpose();
-//       
-// //       const VectorXd cinvrow0 = Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms)).row(0).head(nstateparms);
-// //       
-//       std::cout << "kinfit covariance:" << std::endl;
-//       std::cout << dimu_vertex->error().matrix() << std::endl;
-//       
-//       std::cout << "GBL covariance:" << std::endl;
-//       std::cout << 2.*covvtx << std::endl;
-//       
-//       std::cout << "kinfit qop0 covariance:" << std::endl;
-//       std::cout << covqop0kin << std::endl;
-//       
-//       std::cout << "GBL qop0 covariance:" << std::endl;
-//       std::cout << 2.*covqop0 << std::endl;
-//       
-//       std::cout << "kinfit qop1 covariance:" << std::endl;
-//       std::cout << covqop1kin << std::endl;
-//       
-//       std::cout << "GBL qop1 covariance:" << std::endl;
-//       std::cout << 2.*covqop1 << std::endl;
-      
-//       std::cout << "dqop0 beamline" << std::endl;
-//       std::cout << dxfull[trackstateidxarr[0]] << std::endl;
-//       std::cout << "dqop0 first layer" << std::endl;
-//       std::cout << dxfull[trackstateidxarr[0]+3] << std::endl;
-//       std::cout << "dqop0 second layer" << std::endl;
-//       std::cout << dxfull[trackstateidxarr[0]+6] << std::endl;
-//       
-//       std::cout << "dqop1 beamline" << std::endl;
-//       std::cout << dxfull[trackstateidxarr[1]] << std::endl;
-//       std::cout << "dqop1 first layer" << std::endl;
-//       std::cout << dxfull[trackstateidxarr[1]+3] << std::endl;
-//       std::cout << "dqop1 second layer" << std::endl;
-//       std::cout << dxfull[trackstateidxarr[1]+6] << std::endl;
-//       
-//       std::cout << "sigmam" << std::endl;
-//       std::cout << std::sqrt(covmass[0]) << std::endl;
-
-//       
-//       std::cout << "cinvrow0" << std::endl;
-//       std::cout << cinvrow0 << std::endl;
-      
-      //TODO restore statejac stuff
-//       dxstate = statejac*dxfull;
-//       const Vector5d dxRef = dxstate.head<5>();
-//       const Matrix5d Cinner = (statejac*Cinvd.solve(MatrixXd::Identity(nstateparms,nstateparms))*statejac.transpose()).topLeftCorner<5,5>();
-      
+      }      
       //TODO fill outputs
       
     }

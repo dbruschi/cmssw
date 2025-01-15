@@ -78,21 +78,6 @@ Geant4ePropagatorcvh::Geant4ePropagatorcvh(const MagneticField *field,
   fluct = new G4UniversalFluctuationForExtrapolator();
   fluct->SetParticleAndCharge(partdef, 1.);
 
-  if (false) {
-    //FIXME memory leak
-    G4DataVector *cuts = new G4DataVector(G4Material::GetNumberOfMaterials(), DBL_MAX);
-    msmodel = new G4WentzelVIModelCustom();
-    msmodel->Initialise(partdef, *cuts);
-  }
-
-  if (false) {
-    const G4MaterialTable *mattable = G4Material::GetMaterialTable();
-
-    for (const G4Material *mat : *mattable) {
-      std::cout << "name = " << mat->GetName() << " density = " << mat->GetDensity() / mg * mole << " radlen = " << mat->GetRadlen() << std::endl;
-    }
-  }
-
 }
 
 /** Destructor.
@@ -318,9 +303,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   // Construct the target surface
   //
   //* Set the target surface
-
-  const G4Field *field = G4TransportationManager::GetTransportationManager()->GetFieldManager()->GetDetectorField();
-//   //FIXME check thread safety of this
                                                                                   
   ErrorTargetPair g4eTarget_center = transformToG4SurfaceTarget(pDest, false);
 
@@ -350,12 +332,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   CLHEP::Hep3Vector g4InitMom = TrackPropagation::globalVectorToHep3Vector(cmsInitMom * GeV);
 
   debugReportTrackState("intitial", cmsInitPos, g4InitPos, cmsInitMom, g4InitMom, pDest);
-
-  // Set the mode of propagation according to the propagation direction
-  // G4ErrorMode mode = G4ErrorMode_PropForwards;
-
-  // if (!configurePropagation(mode, pDest, cmsInitPos, cmsInitMom))
-  //	return TsosPP(TrajectoryStateOnSurface(), 0.0f);
 
   ///////////////////////////////
   // Set the error and trajectories, and finally propagate
@@ -599,8 +575,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
   double dEdxlast = 0.;
   
   Matrix<double, 5, 5> dErrorDxLast = Matrix<double, 5, 5>::Zero();
-  
-  bool firstStep = true;
 
   double RItotal = 0.;
   double deltaTotal = 0.;
@@ -635,7 +609,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
 
     const double thisPathLength = TrackPropagation::g4doubleToCmsDouble(g4eTrajState.GetG4Track()->GetStepLength());
 
-    const double pPre = g4eTrajState.GetMomentum().mag()/GeV;
     const double ePre = g4eTrajState.GetG4Track()->GetStep()->GetPreStepPoint()->GetTotalEnergy() / GeV;
     const double ePost = g4eTrajState.GetG4Track()->GetStep()->GetPostStepPoint()->GetTotalEnergy() / GeV;
     const double dEdx = (ePost - ePre)/thisPathLength;
@@ -663,27 +636,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     const G4Material* mate = g4eTrajState.GetG4Track()->GetVolume()->GetLogicalVolume()->GetMaterial();
     const double X0 = mate->GetRadlen() / cm;
     RItotal += msfact*thisPathLength/X0;
-
-    if (false) {
-      const std::pair<double, double> landau = computeLandau(g4eTrajState.GetG4Track());
-
-      deltaTotal += landau.first;
-      wTotal += landau.second;
-      
-      constexpr double kd = 0.13017714;
-      const double c = landau.second;
-
-      const double ascale = 2.*c/M_PI;
-
-      constexpr double alphalandau = 0.996;
-      const double varE = ascale*ascale*ROOT::Math::landau_xm2(ROOT::Math::landau_quantile(alphalandau));
-
-      const double pPre6 = std::pow(pPre, 6);
-      // Apply it to error
-      const double varqop = ePre * ePre * varE / pPre6;
-
-    }
-
     
     const double ionifact = std::exp(dioni);
 
@@ -692,9 +644,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
     // separate scaling for ionization and MS
     
     g4errorEnd += errMSIout;
-    
-    
-
     
     if (std::abs(thisPathLength) > 0.) {
       dErrorDxLast = errMSIout/thisPathLength;
@@ -738,17 +687,6 @@ std::pair<TrajectoryStateOnSurface, double> Geant4ePropagatorcvh::propagateGener
       continuePropagation = false;
     }
   }
-
-  constexpr double kd = 0.13017714;
-  const double c = wTotal;
-
-  const double varE = 2.*c*c/M_PI/M_PI/M_PI/kd/kd;
-
-  const double eFinal = g4eTrajState.GetG4Track()->GetTotalEnergy() / GeV;
-  const double pFinal = g4eTrajState.GetMomentum().mag() / GeV;
-  const double p6 = std::pow(pFinal, 6);
-  // Apply it to error
-  const double varqop = eFinal * eFinal * varE / p6;
   
   // CMSSW Tracking convention, backward propagations have negative path length
   if (propagationDirection() == oppositeToMomentum)
@@ -883,117 +821,10 @@ Eigen::Matrix<double, 5, 5> Geant4ePropagatorcvh::PropagateErrorMSC( const G4Tra
   if( iverbose >= 4 ) G4cout << std::setprecision(6) << std::setw(6) << "G4EP:MSC: RI=X/X0 " << RI << " stepLengthCm " << stepLengthCm << " radlen/cm " << (mate->GetRadlen()/cm) << " RI*1.e10:" << RI*1.e10 << G4endl;
 #endif
   G4double charge = aTrack->GetDynamicParticle()->GetCharge();
-  G4double DDold = 1.8496E-4*RI*(charge/pBeta * charge/pBeta );
   G4double X0 = mate->GetRadlen()/cm;
-  G4double Xs = X0*(effZ + 1.)*std::log(287./std::sqrt(effZ))/std::log(159.*std::pow(effZ, -1./3.))/effZ;
-
-  if (false) {
-    msmodel->DefineMaterial(aTrack->GetMaterialCutsCouple());
-
-
-    double pathlenghtmp = aTrack->GetStep()->GetStepLength();
-    msmodel->ComputeTruePathLengthLimit(*aTrack, pathlenghtmp);
-
-    const double truesteplength = msmodel->ComputeTrueStepLength(aTrack->GetStep()->GetStepLength())/cm;
-
-    const G4ThreeVector testdir(1., 0., 0.);
-
-    const int nsample = 1000*1000;
-    double sumw = 0.;
-    double sumdphi2 = 0.;
-    for (unsigned int isample = 0; isample < nsample; ++isample) {
-      const G4ThreeVector scattered = msmodel->SampleScatteringTest(testdir, 0.);
-      const double dphi = std::atan2(scattered.y(), scattered.x());
-
-      sumdphi2 += dphi*dphi;
-      sumw += 1.;
-    }
-    const double phivar = sumdphi2/sumw;
-
-    const double DDlam = phivar;
-    const double DDlamscaled = DDlam/stepLengthCm;
-    const double DDlamscaled2 = DDlam/stepLengthCm*pBeta*pBeta;
-
-  }
-
-
-  if (false) {
-    double invX0alt = 0.;
-    double X0alt2 = 0.;
-    double invXsalt = 0.;
-    double sumw = 0.;
-    const G4double* fracVec = mate->GetFractionVector();
-    for(unsigned int ii = 0; ii < mate->GetNumberOfElements(); ++ii)
-    {
-      const double iZ = mate->GetElement(ii)->GetZ();
-      const double iA = mate->GetElement(ii)->GetA() / g * mole;
-      const double iX0 = 716.4*iA/iZ/(iZ+1.)/std::log(287./std::sqrt(iZ));
-      const double iXs = iX0*(iZ + 1.)*std::log(287./std::sqrt(iZ))/std::log(159.*std::pow(iZ, -1./3.))/iZ;
-      
-      invX0alt += fracVec[ii]/iX0;
-      invXsalt += fracVec[ii]/iXs;
-      
-      sumw += fracVec[ii];
-    }
-    
-    const double density = mate->GetDensity() / mg * mole;
-
-    const double X0alt = 1./invX0alt/density;
-    const double Xsalt = 1./invXsalt/density;
-  }
-  
+  G4double Xs = X0*(effZ + 1.)*std::log(287./std::sqrt(effZ))/std::log(159.*std::pow(effZ, -1./3.))/effZ;  
   
   G4double DD = 2.25e-4*stepLengthCm*(charge/pBeta * charge/pBeta )/Xs;
-
-  if (false) {
-    //TODO check charge^2 dependence?
-    
-    const double varT = 0.015*0.015*RI*charge*charge/pBeta/pBeta;
-    
-    const double nbar = stepLengthCm*2.215e4*std::pow(effZ, 4./3.)/beta/beta/effA;
-    
-    const double n = std::pow(effZ, 0.1)*std::log(nbar);
-    
-    const double var0 = 1.827e-1 + 3.803e-2*n + 5.783e-4*n*n;
-    const double a = 2.822e-1 + 9.828e-2*n - 1.355e-2*n*n + 1.330e-3*n*n*n - 4.590e-5*n*n*n*n;
-    
-    const double Q = 41e3*std::pow(effZ, -2./3.);
-    const double b = Q/std::sqrt(nbar*(std::log(Q) - 0.5));
-    
-    const double epsilon = std::max(0., (1. - var0)/(a*a*(std::log(b/a) - 0.5) - var0));
-    
-    const double alpha = 0.9995;
-    const double alphap = alpha;
-    
-    const double k = b*b/(a*a + b*b);
-    
-    const double varalpha = (1. - epsilon)*var0 - 0.5*epsilon*a*a/k*(k*alphap + std::log(1. - k*alphap));
-    
-    const double varone = (1. - epsilon)*var0 - 0.5*epsilon*a*a/k*(k + std::log(1. - k));
-
-    const double DDalpha = DD*varalpha;
-    const double DDone = DD*varone;
-
-    DD = varT*varalpha;
-
-  }
-  
-  if (false) {
-
-    //TODO more accurate coeffs from fine structure constant and electron mass?
-    const double tmin = 2.66e-6*std::pow(effZ, 1./3.)/pPre;
-    const double tmax = 0.14*std::pow(effA, -1./3.)/pPre;
-    
-    const double k = 2.*tmin*tmin*(1. + tmin*tmin/tmax/tmax);
-    const double nbar = 1.587e7*stepLengthCm*std::pow(effZ, -2./3.)/std::log(159.*std::pow(effZ, -1./3.))/Xs/beta/beta;
-    
-    const double alpha = 1.0;
-    const double talpha = std::sqrt(2.*alpha/(k - 2.*tmin*tmin*alpha))*tmin*tmin;
-    
-    const double tsqbar = k*(0.5*tmin*tmin/(talpha*talpha + tmin*tmin) - std::log(tmin) + 0.5*std::log(talpha*talpha + tmin*tmin) - 0.5);
-    
-    const double DDalpha = 0.5*nbar*tsqbar;  
-  }
 
 #ifdef G4EVERBOSE
   if( iverbose >= 3 ) G4cout << "G4EP:MSC: D*1E6= " << DD*1.E6 <<" pBeta " << pBeta << G4endl;
@@ -1046,10 +877,6 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
   G4double beta = pPre/Etot;
   G4double gamma = Etot / mass;
 
-  // *     Calculate xi factor (keV).
-  G4double XIkev = 153.5 * effZ * stepLengthCm * (mate->GetDensity() / mg * mole) /
-                (effA * beta * beta);
-
   // *     Maximum energy transfer to atomic electron (KeV).
   G4double eta       = beta * gamma;
   G4double etasq     = eta * eta;
@@ -1062,33 +889,6 @@ std::pair<double, double> Geant4ePropagatorcvh::computeLandau(const G4Track* aTr
   G4double Emaxmev = Emax*1e-3;
   G4double stepLengthmm = stepLengthCm*10;
   const double ekinmev = aTrack->GetStep()->GetPreStepPoint()->GetKineticEnergy();
-
-  const double xi  = XIkev*1e-3;
-
-  const double rho = mate->GetDensity() / mg * mole;
-  const double hbarwp = std::sqrt(rho*effZ/effA)*28.816e-6;
-  const double I = mate->GetIonisation()->GetMeanExcitationEnergy();
-  const double delta = 2.*std::log(hbarwp/I) + 2.*std::log(beta*gamma) - 1.;
-  const double m = mass*1e3;
-
-  if (false) {
-
-    const double deltap = xi*(std::log(2.*m*beta*beta*gamma*gamma/I) + std::log(xi/I) + 0.2 - beta*beta - delta)*1e-3;
-    const double fwhm = 4.*xi*1e-3;
-
-
-    //MPV of landau distribution for mu = 0, c = pi/2
-    constexpr double k = -0.22278;
-
-    const double c = 0.125*M_PI*fwhm;
-    const double ascale = 0.25*fwhm;
-    const double mshift = deltap - ascale*k;
-
-    const double mu = mshift - ascale*std::log(ascale);
-
-    return std::make_pair(mu, c);
-
-  }
 
   const double ePremev = aTrack->GetStep()->GetPreStepPoint()->GetTotalEnergy();
   const double ePostmev = aTrack->GetStep()->GetPostStepPoint()->GetTotalEnergy();
@@ -1181,114 +981,14 @@ double Geant4ePropagatorcvh::computeErrorIoni(const G4Track* aTrack, double pfor
     Since I do not have enough info at the moment to implement Landau &
     sub-Landau models for k=Xi/Emax <0.01 I'll saturate k at this value for now
   */
-  
-//   dedxSq *= 0.;
-  
-  // Implementation based on PANDA Report PV/01-07 Section 7
-  // TODO understand implications for thick scatterer split into small steps
-
-#if 0
-  G4double dedxSq;
-  
-  const double kappa = XI/Emax;
-//   std::cout << "steplength = " << stepLengthCm << " xi = " << XI*1e-6 << " xi/dx = " << XI*1e-6/stepLengthCm << " emax = " << Emax*1e-6 << " kappa = " << kappa << " effZ = " << effZ << std::endl;
-  
-  if (kappa > 0.005) {
-    //vavilov distribution (or gaussian limit which is equivalent for the variance)
-  
-    dedxSq = XI * Emax * (1. - (beta * beta / 2.)) * 1.E-12;  // now in GeV^2
     
-    // std::cout << "vavilov: dedxSq = " << dedxSq << std::endl;
-  }
-  else {
-  
-  
-    const double I = 16.*pow(effZ,0.9);
-    const double f2 = effZ <= 2. ? 0. : 2./effZ;
-    const double f1 = 1. - f2;
-    const double e2 = 10.*effZ*effZ;
-    const double e1 = pow(I/pow(e2,f2),1./f1);
-    const double r = 0.4;
-//     const double emaxev = Emax*1e6;
-    const double emaxev = Emax*1e3; // keV -> eV
-    const double massev = mass*1e9;
-    
-    const double ePre = aTrack->GetStep()->GetPreStepPoint()->GetTotalEnergy() / GeV;
-    const double ePost = aTrack->GetStep()->GetPostStepPoint()->GetTotalEnergy() / GeV;
-    const double C = (ePre-ePost)/stepLengthCm*1e9;
-    
-    const double sigma1 = C*f1*(log(2.*massev*beta*beta*gamma*gamma/e1) - beta*beta)/e1/(log(2.*massev*beta*beta*gamma*gamma/I) - beta*beta)*(1.-r);
-    
-    const double sigma2 = C*f1*(log(2.*massev*beta*beta*gamma*gamma/e2) - beta*beta)/e2/(log(2.*massev*beta*beta*gamma*gamma/I) - beta*beta)*(1.-r);
-    
-    const double sigma3 = C*emaxev/I/(emaxev+I)/log((emaxev+I)/I)*r;
-    
-    const double Nc = (sigma1 + sigma2 + sigma3)*stepLengthCm;
-    
-//     std::cout << "Nc = " << Nc << std::endl;
-    
-    // if (Nc > 50.) {
-    if (false) {
-      //landau
-      // constexpr double sigalpha = 15.76; //corresponds to 0.996 quantile
-//       constexpr double sigalpha = 22.33; //corresponds to 0.998 quantile
-      constexpr double sigalpha = 31.59; //corresponds to 0.999 quantile
-      
-      dedxSq = sigalpha*sigalpha*XI*XI*1e-12;
-      
-      const double dedxsqvavilov = XI * Emax * (1. - (beta * beta / 2.)) * 1.E-12;
-      
-      // std::cout << "dedxsq: vavilov = " << dedxsqvavilov << " landau = " << dedxSq << std::endl;
-//       std::cout << "landau\n";
-    }
-    else {
-      //sub-landau
-      // const double alpha = 0.996;
-//       const double alpha = 0.998;
-      // const double alpha = 0.999;
-      const double alpha = 0.9999;
-      // const double alpha = 1.;
-      const double ealpha = I/(1. - alpha*emaxev/(emaxev + I));
-      const double e3 = I*(emaxev +I)*log(ealpha/I)/emaxev;
-      const double e3sq = I*(emaxev + I)*(ealpha - I)/emaxev;
-      const double sigmae3sq = e3sq  - e3*e3;
-      
-      dedxSq = sigma1*stepLengthCm*e1*e1 + sigma2*stepLengthCm*e2*e2 + sigma3*stepLengthCm*e3*e3 + sigma3*stepLengthCm*sigmae3sq*(sigma3*stepLengthCm + 1.);
-      dedxSq *= 1e-18;
-      
-      const double dedxsqlandau = 15.76*15.76*XI*XI*1e-12;
-      const double dedxsqvavilov = XI * Emax * (1. - (beta * beta / 2.)) * 1.E-12;
-//       
-      // std::cout << "dedxsq:  vavilov = " << dedxsqvavilov << " landau = " << dedxsqlandau << " sublandau = " << dedxSq << " Emax = " << Emax << " ealpha = " << ealpha << std::endl;;
-//       std::cout << "sublandau\n";
-      
-    }
-    
-  
-  }
-#endif
-  
   G4double Emaxmev = Emax*1e-3;
   G4double stepLengthmm = stepLengthCm*10;
   const double ePre = aTrack->GetStep()->GetPreStepPoint()->GetKineticEnergy() / GeV;
   const double ePost = aTrack->GetStep()->GetPostStepPoint()->GetKineticEnergy() / GeV;
-  G4double eav = (ePre-ePost)*1e3;
   G4double ekinmev = 0.5*(ePre + ePost)*1e3;
 
   G4double dedxsqurban = 1e-6*fluct->SampleFluctuations(mate, aTrack->GetDynamicParticle(), Emaxmev, stepLengthmm, ekinmev);
-  
-  G4double dedxsqvavilov =
-    XI * Emax * (1. - (beta * beta / 2.)) * 1.E-12;  // now in GeV^2
-
-  
-  G4double dedxsqvavilovtruncated =
-    XI * std::min(Emax, 1e6) * (1. - (beta * beta / 2.)) * 1.E-12;  // now in GeV^2
-
-  const double dedxsqfixed = XI*1e-6;
-
-  constexpr double sigalpha = 31.59; //corresponds to 0.999 quantile
-  
-  const double dedxSqlandau = sigalpha*sigalpha*XI*XI*1e-12;  
   
   G4double dedxSq = dedxsqurban;
 

@@ -19,10 +19,6 @@ class MagneticFieldOffset : public MagneticField {
 
  public:
    MagneticFieldOffset(const MagneticField *field) : field_(field), offset_(0.) {}
-//   ~MagneticFieldOffset() override;
-
-  /// Copy constructor implement a shallow copy (ie no ownership of actual engines)
-//   MagneticFieldOffset(const MagneticFieldOffset& vbf);
 
   /// Returns a shallow copy.
   MagneticField* clone() const override;
@@ -34,8 +30,6 @@ class MagneticFieldOffset : public MagneticField {
   bool isDefined(const GlobalPoint& gp) const override { return field_->isDefined(gp); }
   
   void setOffset(float offset) { offset_ = offset; }
-
-//   bool isZSymmetric() const;
 
 
  private:

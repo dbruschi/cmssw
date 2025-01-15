@@ -116,7 +116,6 @@ G4EnergyLossForExtrapolatorCustom::EnergyBeforeStep(G4double kinEnergy,
 					      const G4Material* mat, 
 					      const G4ParticleDefinition* part)
 {
-  //G4cout << "G4EnergyLossForExtrapolatorCustom::EnergyBeforeStep" << G4endl;
   G4double kinEnergyFinal = kinEnergy;
 
   if(SetupKinematics(part, mat, kinEnergy)) {
@@ -142,13 +141,10 @@ G4EnergyLossForExtrapolatorCustom::TrueStepLength(G4double kinEnergy,
 					    const G4ParticleDefinition* part)
 {
   G4double res = stepLength;
-  //G4cout << "## G4EnergyLossForExtrapolatorCustom::TrueStepLength L= " << res 
-  //	 <<  "  " << part->GetParticleName() << G4endl;
   if(SetupKinematics(part, mat, kinEnergy)) {
     if(part == electron || part == positron) {
       const G4double x = stepLength*
 	ComputeValue(kinEnergy, GetPhysicsTable(fMscElectron), mat->GetIndex());
-      //G4cout << " x= " << x << G4endl;
       if(x < 0.2)         { res *= (1.0 + 0.5*x + x*x/3.0); }
       else if(x < 0.9999) { res = -G4Log(1.0 - x)*stepLength/x; }
       else { res = ComputeRange(kinEnergy, part, mat); }
