@@ -51,7 +51,7 @@
 #include "G4ParticleDefinition.hh"
 #include "G4Poisson.hh"
 #include <CLHEP/Random/RandomEngine.h>
-#include "TrackPropagation/Geant4e/interface/G4TablesForExtrapolatorCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4TablesForExtrapolatorForCVH.h"
 
 class G4UniversalFluctuationForExtrapolator : public G4VEmFluctuationModel
 {
@@ -156,7 +156,7 @@ protected:
   G4double* rndmarray = nullptr;
   G4int sizearray = 30;
 
-  G4TablesForExtrapolatorCustom *tables = nullptr;
+  G4TablesForExtrapolatorForCVH *tables = nullptr;
   const G4PhysicsTable *table = nullptr;
   G4double massratio = 1.;
   G4double charge2ratio = 1.;

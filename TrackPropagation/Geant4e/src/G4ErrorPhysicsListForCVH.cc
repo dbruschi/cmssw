@@ -33,7 +33,7 @@
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 
-#include "TrackPropagation/Geant4e/interface/G4ErrorPhysicsListCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4ErrorPhysicsListForCVH.h"
 #include "G4ComptonScattering.hh"
 #include "G4GammaConversion.hh"
 #include "G4PhotoElectricEffect.hh"
@@ -65,10 +65,10 @@
 #include "G4PhysicsTable.hh"
 #include "G4Transportation.hh"
 
-#include "TrackPropagation/Geant4e/interface/G4ErrorEnergyLossCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4ErrorEnergyLossForCVH.h"
 
 //------------------------------------------------------------------------
-G4ErrorPhysicsListCustom::G4ErrorPhysicsListCustom()
+G4ErrorPhysicsListForCVH::G4ErrorPhysicsListForCVH()
   : G4VUserPhysicsList()
 {
   defaultCutValue =
@@ -76,12 +76,12 @@ G4ErrorPhysicsListCustom::G4ErrorPhysicsListCustom()
 }
 
 //------------------------------------------------------------------------
-G4ErrorPhysicsListCustom::~G4ErrorPhysicsListCustom()
+G4ErrorPhysicsListForCVH::~G4ErrorPhysicsListForCVH()
 {
 }
 
 //------------------------------------------------------------------------
-void G4ErrorPhysicsListCustom::ConstructParticle()
+void G4ErrorPhysicsListForCVH::ConstructParticle()
 {
   // In this method, static member functions should be called
   // for all particles which you want to use.
@@ -105,7 +105,7 @@ void G4ErrorPhysicsListCustom::ConstructParticle()
 }
 
 //------------------------------------------------------------------------
-void G4ErrorPhysicsListCustom::ConstructProcess()
+void G4ErrorPhysicsListForCVH::ConstructProcess()
 {
   G4Transportation* theTransportationProcess = new G4Transportation();
 
@@ -125,7 +125,7 @@ void G4ErrorPhysicsListCustom::ConstructProcess()
     G4ProcessManager* pmanager     = particle->GetProcessManager();
     if(!particle->IsShortLived())
     {
-      G4cout << particle << "G4ErrorPhysicsListCustom:: particle process manager "
+      G4cout << particle << "G4ErrorPhysicsListForCVH:: particle process manager "
              << particle->GetParticleName() << " = "
              << particle->GetProcessManager() << G4endl;
       // Add transportation process for all particles other than  "shortlived"
@@ -133,7 +133,7 @@ void G4ErrorPhysicsListCustom::ConstructProcess()
       {
         // Error !! no process manager
         G4String particleName = particle->GetParticleName();
-        G4Exception("G4ErrorPhysicsListCustom::ConstructProcess",
+        G4Exception("G4ErrorPhysicsListForCVH::ConstructProcess",
                     "No process manager", RunMustBeAborted, particleName);
       }
       else
@@ -171,16 +171,16 @@ void G4ErrorPhysicsListCustom::ConstructProcess()
 
 #include "G4ErrorStepLengthLimitProcess.hh"
 #include "G4ErrorMagFieldLimitProcess.hh"
-#include "TrackPropagation/Geant4e/interface/G4ErrorMessengerCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4ErrorMessengerForCVH.h"
 
-void G4ErrorPhysicsListCustom::ConstructEM()
+void G4ErrorPhysicsListForCVH::ConstructEM()
 {
-  G4ErrorEnergyLossCustom* eLossProcess = new G4ErrorEnergyLossCustom;
+  G4ErrorEnergyLossForCVH* eLossProcess = new G4ErrorEnergyLossForCVH;
   G4ErrorStepLengthLimitProcess* stepLengthLimitProcess =
     new G4ErrorStepLengthLimitProcess;
   G4ErrorMagFieldLimitProcess* magFieldLimitProcess =
     new G4ErrorMagFieldLimitProcess;
-  new G4ErrorMessengerCustom(stepLengthLimitProcess, magFieldLimitProcess,
+  new G4ErrorMessengerForCVH(stepLengthLimitProcess, magFieldLimitProcess,
                        eLossProcess);
 
   auto myParticleIterator = GetParticleIterator();
@@ -210,7 +210,7 @@ void G4ErrorPhysicsListCustom::ConstructEM()
 }
 
 //------------------------------------------------------------------------
-void G4ErrorPhysicsListCustom::SetCuts()
+void G4ErrorPhysicsListForCVH::SetCuts()
 {
   //  " G4VUserPhysicsList::SetCutsWithDefault" method sets
   //   the default cut value or all particle types

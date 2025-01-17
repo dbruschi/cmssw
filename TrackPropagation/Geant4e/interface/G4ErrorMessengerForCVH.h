@@ -25,44 +25,51 @@
 //
 //
 //
-//
 // Class Description:
 //
-//  Default physics list for GEANT4e (should not be overridden, unless by
-//  experts). No multiple scattering and no production of secondaries.
-//  The energy loss process is G4eMuIonisation or G4EnergyLossForExtrapolator
-//  (depending on the value of the enviromental variable G4EELOSSEXTRAP)
-//  It also defines the geant4e processes to limit the step:
-//  G4eMagneticFieldLimitProcess, G4eStepLimitProcess.
+// Messenger class for Geant4e processes limiting the step.
 
 // History:
 // - Created:   P. Arce
-// ---------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-#ifndef TrackPropagation_G4ErrorPhysicsListCustom_h
-#define TrackPropagation_G4ErrorPhysicsListCustom_h
+#ifndef TrackPropagation_G4ErrorMessengerForCVH_h
+#define TrackPropagation_G4ErrorMessengerForCVH_h
 
 #include "globals.hh"
-#include "G4VUserPhysicsList.hh"
+#include "G4UImessenger.hh"
 
-class G4ErrorPhysicsListCustom: public G4VUserPhysicsList
+class G4UIdirectory;
+class G4UIcmdWithAString;
+class G4UIcmdWithADoubleAndUnit;
+class G4UIcmdWithADouble;
+class G4ErrorStepLengthLimitProcess;
+class G4ErrorMagFieldLimitProcess;
+class G4ErrorEnergyLossForCVH;
+
+//-----------------------------------------------------------------
+
+class G4ErrorMessengerForCVH : public G4UImessenger
 {
  public:  // with description
-  G4ErrorPhysicsListCustom();
-  virtual ~G4ErrorPhysicsListCustom();
+  G4ErrorMessengerForCVH(G4ErrorStepLengthLimitProcess* lengthAct,
+                   G4ErrorMagFieldLimitProcess* magAct,
+                   G4ErrorEnergyLossForCVH* elossAct);
+  ~G4ErrorMessengerForCVH();
 
- protected:
-  virtual void ConstructParticle();
-  // constructs gamma, e+/-, mu+/- and stable hadrons
+  void SetNewValue(G4UIcommand*, G4String);
 
-  virtual void ConstructProcess();
-  // construct physical processes
+ private:
+  G4ErrorStepLengthLimitProcess* StepLengthAction;
+  G4ErrorMagFieldLimitProcess* MagFieldAction;
+  G4ErrorEnergyLossForCVH* EnergyLossAction;
 
-  virtual void SetCuts();
-  // SetCutsWithDefault
+  G4UIdirectory* myDir;
+  G4UIdirectory* myDirLimits;
 
-  virtual void ConstructEM();
-  // constructs electromagnetic processes
+  G4UIcmdWithADoubleAndUnit* StepLengthLimitCmd;
+  G4UIcmdWithADouble* MagFieldLimitCmd;
+  G4UIcmdWithADouble* EnergyLossCmd;
 };
 
 #endif

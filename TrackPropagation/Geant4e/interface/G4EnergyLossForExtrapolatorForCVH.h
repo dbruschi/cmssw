@@ -26,7 +26,7 @@
 //
 //---------------------------------------------------------------------------
 //
-// ClassName:    G4EnergyLossForExtrapolatorCustom
+// ClassName:    G4EnergyLossForExtrapolatorForCVH
 //  
 // Description:  This class provide calculation of energy loss, fluctuation, 
 //               and msc angle
@@ -46,15 +46,15 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-#ifndef TrackPropagation_G4EnergyLossForExtrapolatorCustom_h
-#define TrackPropagation_G4EnergyLossForExtrapolatorCustom_h 1
+#ifndef TrackPropagation_G4EnergyLossForExtrapolatorForCVH_h
+#define TrackPropagation_G4EnergyLossForExtrapolatorForCVH_h 1
 
 #include <vector>
 #include <CLHEP/Units/PhysicalConstants.h>
 
 #include "globals.hh"
 #include "G4PhysicsTable.hh"
-#include "TrackPropagation/Geant4e/interface/G4TablesForExtrapolatorCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4TablesForExtrapolatorForCVH.h"
 #include "G4Log.hh"
 #include "G4Threading.hh"
 
@@ -64,13 +64,13 @@ class G4MaterialCutsCouple;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-class G4EnergyLossForExtrapolatorCustom
+class G4EnergyLossForExtrapolatorForCVH
 {
 public:
 
-  explicit G4EnergyLossForExtrapolatorCustom(G4int verb = 1);
+  explicit G4EnergyLossForExtrapolatorForCVH(G4int verb = 1);
 
-  ~G4EnergyLossForExtrapolatorCustom();
+  ~G4EnergyLossForExtrapolatorForCVH();
 
   void Initialisation();
 
@@ -129,9 +129,9 @@ public:
   inline void SetMaxEnergyTransfer(G4double);
 
   // hide assignment operator
-  G4EnergyLossForExtrapolatorCustom & operator=
-  (const G4EnergyLossForExtrapolatorCustom &right) = delete;
-  G4EnergyLossForExtrapolatorCustom(const G4EnergyLossForExtrapolatorCustom&) = delete;
+  G4EnergyLossForExtrapolatorForCVH & operator=
+  (const G4EnergyLossForExtrapolatorForCVH &right) = delete;
+  G4EnergyLossForExtrapolatorForCVH(const G4EnergyLossForExtrapolatorForCVH&) = delete;
    
 private:
 
@@ -148,7 +148,7 @@ private:
 #ifdef G4MULTITHREADED
   static G4Mutex extrMutex;
 #endif
-  static G4TablesForExtrapolatorCustom* tables;
+  static G4TablesForExtrapolatorForCVH* tables;
 
   const G4ParticleDefinition* currentParticle = nullptr;
   const G4ParticleDefinition* electron = nullptr;
@@ -183,7 +183,7 @@ private:
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline const G4PhysicsTable* 
-G4EnergyLossForExtrapolatorCustom::GetPhysicsTable(ExtTableType type) const
+G4EnergyLossForExtrapolatorForCVH::GetPhysicsTable(ExtTableType type) const
 {
   return tables->GetPhysicsTable(type);
 }
@@ -191,7 +191,7 @@ G4EnergyLossForExtrapolatorCustom::GetPhysicsTable(ExtTableType type) const
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4EnergyLossForExtrapolatorCustom::EnergyAfterStep(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::EnergyAfterStep(G4double kinEnergy,
 					     G4double step, 
 					     const G4Material* mat, 
 					     const G4String& name)
@@ -202,7 +202,7 @@ G4EnergyLossForExtrapolatorCustom::EnergyAfterStep(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4EnergyLossForExtrapolatorCustom::EnergyBeforeStep(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::EnergyBeforeStep(G4double kinEnergy,
 					      G4double step, 
 					      const G4Material* mat, 
 					      const G4String& name)
@@ -213,7 +213,7 @@ G4EnergyLossForExtrapolatorCustom::EnergyBeforeStep(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4EnergyLossForExtrapolatorCustom::AverageScatteringAngle(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::AverageScatteringAngle(G4double kinEnergy,
 						    G4double step, 
 						    const G4Material* mat, 
 						    const G4String& name)
@@ -224,7 +224,7 @@ G4EnergyLossForExtrapolatorCustom::AverageScatteringAngle(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4EnergyLossForExtrapolatorCustom::EnergyDispersion(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::EnergyDispersion(G4double kinEnergy,
 					      G4double step, 
 					      const G4Material* mat, 
 					      const G4String& name)
@@ -235,7 +235,7 @@ G4EnergyLossForExtrapolatorCustom::EnergyDispersion(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4EnergyLossForExtrapolatorCustom::ComputeTrueStep(const G4Material* mat,
+G4EnergyLossForExtrapolatorForCVH::ComputeTrueStep(const G4Material* mat,
 					     const G4ParticleDefinition* part,
 					     G4double kinEnergy, 
 					     G4double stepLength)
@@ -247,7 +247,7 @@ G4EnergyLossForExtrapolatorCustom::ComputeTrueStep(const G4Material* mat,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4EnergyLossForExtrapolatorCustom::ComputeValue(G4double x,
+G4EnergyLossForExtrapolatorForCVH::ComputeValue(G4double x,
 					  const G4PhysicsTable* table,
 					  size_t idxMat)
 {
@@ -256,28 +256,28 @@ G4EnergyLossForExtrapolatorCustom::ComputeValue(G4double x,
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4EnergyLossForExtrapolatorCustom::SetVerbose(G4int val)
+inline void G4EnergyLossForExtrapolatorForCVH::SetVerbose(G4int val)
 {
   verbose = val;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4EnergyLossForExtrapolatorCustom::SetMinKinEnergy(G4double val)
+inline void G4EnergyLossForExtrapolatorForCVH::SetMinKinEnergy(G4double val)
 {
   emin = val;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4EnergyLossForExtrapolatorCustom::SetMaxKinEnergy(G4double val)
+inline void G4EnergyLossForExtrapolatorForCVH::SetMaxKinEnergy(G4double val)
 {
   emax = val;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4EnergyLossForExtrapolatorCustom::SetMaxEnergyTransfer(G4double val)
+inline void G4EnergyLossForExtrapolatorForCVH::SetMaxEnergyTransfer(G4double val)
 {
   maxEnergyTransfer = val;
 }

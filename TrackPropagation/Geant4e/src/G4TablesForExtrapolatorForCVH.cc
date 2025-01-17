@@ -25,7 +25,7 @@
 //
 //---------------------------------------------------------------------------
 //
-// ClassName:    G4TablesForExtrapolatorCustom
+// ClassName:    G4TablesForExtrapolatorForCVH
 //  
 // Description:  This class provide calculation of energy loss, fluctuation, 
 //               and msc angle
@@ -45,8 +45,8 @@
  
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-#include "TrackPropagation/Geant4e/interface/G4TablesForExtrapolatorCustom.h"
-#include "TrackPropagation/Geant4e/interface/Geant4ePropagatorcvh.h"
+#include "TrackPropagation/Geant4e/interface/G4TablesForExtrapolatorForCVH.h"
+#include "TrackPropagation/Geant4e/interface/Geant4ePropagator.h"
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4LossTableManager.hh"
@@ -75,7 +75,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4TablesForExtrapolatorCustom::G4TablesForExtrapolatorCustom(G4int verb, G4int bins,
+G4TablesForExtrapolatorForCVH::G4TablesForExtrapolatorForCVH(G4int verb, G4int bins,
                                                  G4double e1, G4double e2, G4bool iononly)
   : emin(e1), emax(e2), verbose(verb), nbins(bins), ionOnly(iononly)
 {
@@ -89,7 +89,7 @@ G4TablesForExtrapolatorCustom::G4TablesForExtrapolatorCustom(G4int verb, G4int b
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4TablesForExtrapolatorCustom:: ~G4TablesForExtrapolatorCustom()
+G4TablesForExtrapolatorForCVH:: ~G4TablesForExtrapolatorForCVH()
 {
   if(nullptr != dedxElectron) {
     dedxElectron->clearAndDestroy();
@@ -150,7 +150,7 @@ G4TablesForExtrapolatorCustom:: ~G4TablesForExtrapolatorCustom()
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 const G4PhysicsTable* 
-G4TablesForExtrapolatorCustom::GetPhysicsTable(ExtTableType type) const
+G4TablesForExtrapolatorForCVH::GetPhysicsTable(ExtTableType type) const
 {
   const G4PhysicsTable* table = nullptr;
   switch (type) 
@@ -199,10 +199,10 @@ G4TablesForExtrapolatorCustom::GetPhysicsTable(ExtTableType type) const
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-void G4TablesForExtrapolatorCustom::Initialisation()
+void G4TablesForExtrapolatorForCVH::Initialisation()
 {
   if(verbose>1) {
-    G4cout << "### G4TablesForExtrapolatorCustom::Initialisation" << G4endl;
+    G4cout << "### G4TablesForExtrapolatorForCVH::Initialisation" << G4endl;
   }
   G4int num = (G4int)G4Material::GetNumberOfMaterials();
   if(nmat == num) { return; }
@@ -235,7 +235,7 @@ void G4TablesForExtrapolatorCustom::Initialisation()
   builder->SetBaseMaterialActive(false);
 
   if(verbose>1) {
-    G4cout << "### G4TablesForExtrapolatorCustom Builds electron tables" 
+    G4cout << "### G4TablesForExtrapolatorForCVH Builds electron tables" 
 	   << G4endl;
   }
   ComputeElectronDEDX(electron, dedxElectron);
@@ -243,7 +243,7 @@ void G4TablesForExtrapolatorCustom::Initialisation()
   builder->BuildInverseRangeTable(rangeElectron, invRangeElectron);  
 
   if(verbose>1) {
-    G4cout << "### G4TablesForExtrapolatorCustom Builds positron tables" 
+    G4cout << "### G4TablesForExtrapolatorForCVH Builds positron tables" 
 	   << G4endl;
   }
   ComputeElectronDEDX(positron, dedxPositron);
@@ -251,7 +251,7 @@ void G4TablesForExtrapolatorCustom::Initialisation()
   builder->BuildInverseRangeTable(rangePositron, invRangePositron);  
 
   if(verbose>1) {
-    G4cout << "### G4TablesForExtrapolatorCustom Builds muon tables" << G4endl;
+    G4cout << "### G4TablesForExtrapolatorForCVH Builds muon tables" << G4endl;
   }
   ComputeMuonDEDX(muonPlus, dedxMuon);
   builder->BuildRangeTable(dedxMuon, rangeMuon);  
@@ -266,7 +266,7 @@ void G4TablesForExtrapolatorCustom::Initialisation()
     G4cout << *invRangeMuon << G4endl;
   }
   if(verbose>1) {
-    G4cout << "### G4TablesForExtrapolatorCustom Builds proton tables" 
+    G4cout << "### G4TablesForExtrapolatorForCVH Builds proton tables" 
 	   << G4endl;
   }
   ComputeProtonDEDX(proton, dedxProton);
@@ -278,7 +278,7 @@ void G4TablesForExtrapolatorCustom::Initialisation()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4PhysicsTable* G4TablesForExtrapolatorCustom::PrepareTable(G4PhysicsTable* ptr)
+G4PhysicsTable* G4TablesForExtrapolatorForCVH::PrepareTable(G4PhysicsTable* ptr)
 {
   G4PhysicsTable* table = ptr;
   if(nullptr == ptr) { table = new G4PhysicsTable(); }
@@ -292,7 +292,7 @@ G4PhysicsTable* G4TablesForExtrapolatorCustom::PrepareTable(G4PhysicsTable* ptr)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-void G4TablesForExtrapolatorCustom::ComputeElectronDEDX(
+void G4TablesForExtrapolatorForCVH::ComputeElectronDEDX(
                                   const G4ParticleDefinition* part,
 				  G4PhysicsTable* table) 
 {
@@ -309,7 +309,7 @@ void G4TablesForExtrapolatorCustom::ComputeElectronDEDX(
 
   const G4MaterialTable* mtable = G4Material::GetMaterialTable();
   if(0<verbose) {
-    G4cout << "G4TablesForExtrapolatorCustom::ComputeElectronDEDX for " 
+    G4cout << "G4TablesForExtrapolatorForCVH::ComputeElectronDEDX for " 
            << part->GetParticleName() 
            << G4endl;
   }
@@ -345,7 +345,7 @@ void G4TablesForExtrapolatorCustom::ComputeElectronDEDX(
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 void 
-G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part, 
+G4TablesForExtrapolatorForCVH::ComputeMuonDEDX(const G4ParticleDefinition* part, 
 					 G4PhysicsTable* table)
 {
   G4BetheBlochModel* ioni = new G4BetheBlochModel();
@@ -368,7 +368,7 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
   const G4MaterialTable* mtable = G4Material::GetMaterialTable();
 
   if(0<verbose) {
-    G4cout << "G4TablesForExtrapolatorCustom::ComputeMuonDEDX for " 
+    G4cout << "G4TablesForExtrapolatorForCVH::ComputeMuonDEDX for " 
 	   << part->GetParticleName() 
            << G4endl;
   }
@@ -387,7 +387,7 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
     G4PhysicsVector* aVector = (*table)[i];
 
     G4double effZ, effA;
-    Geant4ePropagatorcvh::CalculateEffectiveZandA(mat, effZ, effA);
+    Geant4ePropagator::CalculateEffectiveZandA(mat, effZ, effA);
     G4double I = 16.*pow(effZ,0.9);
     const double f2 = effZ <= 2. ? 0. : 2./effZ;
     const double f1 = 1. - f2;
@@ -456,7 +456,7 @@ G4TablesForExtrapolatorCustom::ComputeMuonDEDX(const G4ParticleDefinition* part,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 void 
-G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* part,
+G4TablesForExtrapolatorForCVH::ComputeProtonDEDX(const G4ParticleDefinition* part,
                         		   G4PhysicsTable* table)
 {
   G4BetheBlochModel* ioni = new G4BetheBlochModel();
@@ -470,7 +470,7 @@ G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* par
   const G4MaterialTable* mtable = G4Material::GetMaterialTable();
 
   if(0<verbose) {
-    G4cout << "G4TablesForExtrapolatorCustom::ComputeProtonDEDX for " 
+    G4cout << "G4TablesForExtrapolatorForCVH::ComputeProtonDEDX for " 
 	   << part->GetParticleName() 
            << G4endl;
   }
@@ -502,7 +502,7 @@ G4TablesForExtrapolatorCustom::ComputeProtonDEDX(const G4ParticleDefinition* par
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 void 
-G4TablesForExtrapolatorCustom::ComputeTrasportXS(const G4ParticleDefinition* part, 
+G4TablesForExtrapolatorForCVH::ComputeTrasportXS(const G4ParticleDefinition* part, 
 					   G4PhysicsTable* table)
 {
   G4WentzelVIModel* msc = new G4WentzelVIModel();
@@ -517,7 +517,7 @@ G4TablesForExtrapolatorCustom::ComputeTrasportXS(const G4ParticleDefinition* par
   const G4MaterialTable* mtable = G4Material::GetMaterialTable();
 
   if(0<verbose) {
-    G4cout << "G4TablesForExtrapolatorCustom::ComputeProtonDEDX for " 
+    G4cout << "G4TablesForExtrapolatorForCVH::ComputeProtonDEDX for " 
 	   << part->GetParticleName() 
            << G4endl;
   }

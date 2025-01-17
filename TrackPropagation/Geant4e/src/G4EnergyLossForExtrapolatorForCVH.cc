@@ -26,7 +26,7 @@
 //
 //---------------------------------------------------------------------------
 //
-// ClassName:    G4EnergyLossForExtrapolatorCustom
+// ClassName:    G4EnergyLossForExtrapolatorForCVH
 //  
 // Description:  This class provide calculation of energy loss, fluctuation, 
 //               and msc angle
@@ -46,7 +46,7 @@
  
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-#include "TrackPropagation/Geant4e/interface/G4EnergyLossForExtrapolatorCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4EnergyLossForExtrapolatorForCVH.h"
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ParticleDefinition.hh"
@@ -62,12 +62,12 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 #ifdef G4MULTITHREADED
-G4Mutex G4EnergyLossForExtrapolatorCustom::extrMutex = G4MUTEX_INITIALIZER;
+G4Mutex G4EnergyLossForExtrapolatorForCVH::extrMutex = G4MUTEX_INITIALIZER;
 #endif
 
-G4TablesForExtrapolatorCustom* G4EnergyLossForExtrapolatorCustom::tables = nullptr;
+G4TablesForExtrapolatorForCVH* G4EnergyLossForExtrapolatorForCVH::tables = nullptr;
 
-G4EnergyLossForExtrapolatorCustom::G4EnergyLossForExtrapolatorCustom(G4int verb)
+G4EnergyLossForExtrapolatorForCVH::G4EnergyLossForExtrapolatorForCVH(G4int verb)
   : maxEnergyTransfer(DBL_MAX), verbose(verb)
 {
   emin = 1.*CLHEP::MeV;
@@ -76,7 +76,7 @@ G4EnergyLossForExtrapolatorCustom::G4EnergyLossForExtrapolatorCustom(G4int verb)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4EnergyLossForExtrapolatorCustom::~G4EnergyLossForExtrapolatorCustom()
+G4EnergyLossForExtrapolatorForCVH::~G4EnergyLossForExtrapolatorForCVH()
 {
   if(isMaster) {
     delete tables;
@@ -87,7 +87,7 @@ G4EnergyLossForExtrapolatorCustom::~G4EnergyLossForExtrapolatorCustom()
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4double 
-G4EnergyLossForExtrapolatorCustom::EnergyAfterStep(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::EnergyAfterStep(G4double kinEnergy,
 					     G4double stepLength, 
 					     const G4Material* mat, 
 					     const G4ParticleDefinition* part)
@@ -111,7 +111,7 @@ G4EnergyLossForExtrapolatorCustom::EnergyAfterStep(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4double 
-G4EnergyLossForExtrapolatorCustom::EnergyBeforeStep(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::EnergyBeforeStep(G4double kinEnergy,
 					      G4double stepLength, 
 					      const G4Material* mat, 
 					      const G4ParticleDefinition* part)
@@ -135,7 +135,7 @@ G4EnergyLossForExtrapolatorCustom::EnergyBeforeStep(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4double 
-G4EnergyLossForExtrapolatorCustom::TrueStepLength(G4double kinEnergy,
+G4EnergyLossForExtrapolatorForCVH::TrueStepLength(G4double kinEnergy,
 					    G4double stepLength,
 					    const G4Material* mat, 
 					    const G4ParticleDefinition* part)
@@ -158,7 +158,7 @@ G4EnergyLossForExtrapolatorCustom::TrueStepLength(G4double kinEnergy,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4bool 
-G4EnergyLossForExtrapolatorCustom::SetupKinematics(const G4ParticleDefinition* part,
+G4EnergyLossForExtrapolatorForCVH::SetupKinematics(const G4ParticleDefinition* part,
 					     const G4Material* mat, 
 					     G4double kinEnergy)
 {
@@ -173,7 +173,7 @@ G4EnergyLossForExtrapolatorCustom::SetupKinematics(const G4ParticleDefinition* p
   if(mat != currentMaterial) {
     size_t i = mat->GetIndex();
     if(i >= nmat) {
-      G4cout << "### G4EnergyLossForExtrapolatorCustom WARNING: material index i= " 
+      G4cout << "### G4EnergyLossForExtrapolatorForCVH WARNING: material index i= " 
 	     << i << " above number of materials " << nmat << G4endl;
       return false;
     } else {
@@ -204,11 +204,11 @@ G4EnergyLossForExtrapolatorCustom::SetupKinematics(const G4ParticleDefinition* p
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 const G4ParticleDefinition* 
-G4EnergyLossForExtrapolatorCustom::FindParticle(const G4String& name)
+G4EnergyLossForExtrapolatorForCVH::FindParticle(const G4String& name)
 {
   currentParticle = G4ParticleTable::GetParticleTable()->FindParticle(name);
   if(nullptr == currentParticle) {
-    G4cout << "### G4EnergyLossForExtrapolatorCustom WARNING: "
+    G4cout << "### G4EnergyLossForExtrapolatorForCVH WARNING: "
 	   << "FindParticle() fails to find " << name << G4endl;
   }
   return currentParticle;
@@ -217,7 +217,7 @@ G4EnergyLossForExtrapolatorCustom::FindParticle(const G4String& name)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4double 
-G4EnergyLossForExtrapolatorCustom::ComputeDEDX(G4double ekin, 
+G4EnergyLossForExtrapolatorForCVH::ComputeDEDX(G4double ekin, 
 					 const G4ParticleDefinition* part,
                                          const G4Material* mat)
 {
@@ -240,7 +240,7 @@ G4EnergyLossForExtrapolatorCustom::ComputeDEDX(G4double ekin,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4double 
-G4EnergyLossForExtrapolatorCustom::ComputeRange(G4double ekin, 
+G4EnergyLossForExtrapolatorForCVH::ComputeRange(G4double ekin, 
 					  const G4ParticleDefinition* part,
 					  const G4Material* mat)
 {
@@ -265,7 +265,7 @@ G4EnergyLossForExtrapolatorCustom::ComputeRange(G4double ekin,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 G4double 
-G4EnergyLossForExtrapolatorCustom::ComputeEnergy(G4double range, 
+G4EnergyLossForExtrapolatorForCVH::ComputeEnergy(G4double range, 
 					   const G4ParticleDefinition* part,
 					   const G4Material* mat)
 {
@@ -289,7 +289,7 @@ G4EnergyLossForExtrapolatorCustom::ComputeEnergy(G4double range,
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
   
 G4double 
-G4EnergyLossForExtrapolatorCustom::EnergyDispersion(G4double kinEnergy, 
+G4EnergyLossForExtrapolatorForCVH::EnergyDispersion(G4double kinEnergy, 
 					      G4double stepLength, 
 					      const G4Material* mat, 
 					      const G4ParticleDefinition* part)
@@ -305,7 +305,7 @@ G4EnergyLossForExtrapolatorCustom::EnergyDispersion(G4double kinEnergy,
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-G4double G4EnergyLossForExtrapolatorCustom::AverageScatteringAngle(
+G4double G4EnergyLossForExtrapolatorForCVH::AverageScatteringAngle(
                         G4double kinEnergy, 
 			G4double stepLength, 
 			const G4Material* mat, 
@@ -323,10 +323,10 @@ G4double G4EnergyLossForExtrapolatorCustom::AverageScatteringAngle(
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-void G4EnergyLossForExtrapolatorCustom::Initialisation()
+void G4EnergyLossForExtrapolatorForCVH::Initialisation()
 {
   if(verbose>0) {
-    G4cout << "### G4EnergyLossForExtrapolatorCustom::Initialisation"
+    G4cout << "### G4EnergyLossForExtrapolatorForCVH::Initialisation"
 	   << tables << G4endl;
   }
   electron = G4Electron::Electron();
@@ -342,7 +342,7 @@ void G4EnergyLossForExtrapolatorCustom::Initialisation()
     if(nullptr == tables) {
 #endif
       isMaster = true;
-      tables = new G4TablesForExtrapolatorCustom(verbose, nbins, emin, emax);
+      tables = new G4TablesForExtrapolatorForCVH(verbose, nbins, emin, emax);
       tables->Initialisation();
       nmat = G4Material::GetNumberOfMaterials();
       if(verbose > 0) {

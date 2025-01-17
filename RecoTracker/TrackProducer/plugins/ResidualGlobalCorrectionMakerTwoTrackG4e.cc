@@ -22,7 +22,7 @@
 
 #include "Math/Vector4Dfwd.h"
 
-#include "TrackPropagation/Geant4e/interface/Geant4ePropagatorcvh.h"
+#include "TrackPropagation/Geant4e/interface/Geant4ePropagator.h"
 
 #include "FWCore/Common/interface/TriggerNames.h"
 
@@ -212,7 +212,7 @@ ResidualGlobalCorrectionMakerTwoTrackG4e::ResidualGlobalCorrectionMakerTwoTrackG
   globalGeometryToken_ = esConsumes();
   trackerTopologyToken_ = esConsumes();
   ttrhToken_ = esConsumes(edm::ESInputTag("", "WithAngleAndTemplate"));
-  thePropagatorToken_ = esConsumes(edm::ESInputTag("", "Geant4ePropagatorcvh"));
+  thePropagatorToken_ = esConsumes(edm::ESInputTag("", "Geant4ePropagator"));
   TTBuilderToken_ = esConsumes(edm::ESInputTag("", "TransientTrackBuilder"));
 }
 
@@ -401,8 +401,11 @@ void ResidualGlobalCorrectionMakerTwoTrackG4e::produce(edm::Event &iEvent, const
 
   edm::ESHandle<Propagator> thePropagator = iSetup.getHandle(thePropagatorToken_);
 
+  const Geant4ePropagator *g4prop = dynamic_cast<const Geant4ePropagator*>(thePropagator.product());
   const MagneticField* field = thePropagator->magneticField();
-  const Geant4ePropagatorcvh *g4prop = dynamic_cast<const Geant4ePropagatorcvh*>(thePropagator.product());
+  if (g4prop->GetForCVH() == false) {
+    throw std::runtime_error("Geant4ePropagator must be initialized with forCVH = True") ;
+  }
 
   Handle<edm::View<reco::Candidate>> genPartCollection;
   Handle<math::XYZPointF> genXyz0;

@@ -9,5 +9,6 @@ Geant4ePropagator = cms.ESProducer("GeantPropagatorESProducer",
                                    PropagationDirection=cms.string("alongMomentum"),
                                    ParticleName=cms.string("mu"),
                                    PropagationPtotLimit = cms.double(1.0), ## GeV/c
-                                   MagneticFieldLabel = cms.string("")
+                                   MagneticFieldLabel = cms.string(""),
+                                   ForCVH=cms.bool(False)
                                    )

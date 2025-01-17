@@ -25,7 +25,7 @@
 //
 //---------------------------------------------------------------------------
 //
-// ClassName:    G4TablesForExtrapolatorCustom
+// ClassName:    G4TablesForExtrapolatorForCVH
 //  
 // Description:  This class keep dedx, range, inverse range tables 
 //               for extrapolator
@@ -39,8 +39,8 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-#ifndef TrackPropagation_G4TablesForExtrapolatorCustom_h
-#define TrackPropagation_G4TablesForExtrapolatorCustom_h 1
+#ifndef TrackPropagation_G4TablesForExtrapolatorForCVH_h
+#define TrackPropagation_G4TablesForExtrapolatorForCVH_h 1
 
 #include "globals.hh"
 #include "G4PhysicsTable.hh"
@@ -71,22 +71,22 @@ enum ExtTableType
   fMscElectron
 };
 
-class G4TablesForExtrapolatorCustom
+class G4TablesForExtrapolatorForCVH
 {
 public:
 
-  explicit G4TablesForExtrapolatorCustom(G4int verb, G4int bins, G4double e1, G4double e2, G4bool iononly = false);
+  explicit G4TablesForExtrapolatorForCVH(G4int verb, G4int bins, G4double e1, G4double e2, G4bool iononly = false);
 
-  ~G4TablesForExtrapolatorCustom();
+  ~G4TablesForExtrapolatorForCVH();
 
   const G4PhysicsTable* GetPhysicsTable(ExtTableType type) const; 
 
   void Initialisation();
 
   // hide assignment operator
-  G4TablesForExtrapolatorCustom & operator=
-  (const G4TablesForExtrapolatorCustom &right) = delete;
-  G4TablesForExtrapolatorCustom(const G4TablesForExtrapolatorCustom&) = delete;
+  G4TablesForExtrapolatorForCVH & operator=
+  (const G4TablesForExtrapolatorForCVH &right) = delete;
+  G4TablesForExtrapolatorForCVH(const G4TablesForExtrapolatorForCVH&) = delete;
 
 private:
 

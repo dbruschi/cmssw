@@ -1,6 +1,6 @@
 #include "ResidualGlobalCorrectionMakerBase.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
-#include "TrackPropagation/Geant4e/interface/Geant4ePropagatorcvh.h"
+#include "TrackPropagation/Geant4e/interface/Geant4ePropagator.h"
 
 
 #include "DataFormats/PatCandidates/interface/Muon.h"
@@ -98,7 +98,7 @@ ResidualGlobalCorrectionMakerG4e::ResidualGlobalCorrectionMakerG4e(const edm::Pa
   globalGeometryToken_ = esConsumes();
   trackerTopologyToken_ = esConsumes();
   ttrhToken_ = esConsumes(edm::ESInputTag("", "WithAngleAndTemplate"));
-  thePropagatorToken_ = esConsumes(edm::ESInputTag("", "Geant4ePropagatorcvh"));
+  thePropagatorToken_ = esConsumes(edm::ESInputTag("", "Geant4ePropagator"));
   
 }
 
@@ -297,7 +297,10 @@ void ResidualGlobalCorrectionMakerG4e::produce(edm::Event &iEvent, const edm::Ev
 
   edm::ESHandle<Propagator> thePropagator = iSetup.getHandle(thePropagatorToken_);
   
-  const Geant4ePropagatorcvh *g4prop = dynamic_cast<const Geant4ePropagatorcvh*>(thePropagator.product());
+  const Geant4ePropagator *g4prop = dynamic_cast<const Geant4ePropagator*>(thePropagator.product());
+  if (g4prop->GetForCVH() == false) {
+    throw std::runtime_error("Geant4ePropagator must be initialized with forCVH = True") ;
+  }
   const MagneticField* field = thePropagator->magneticField();
   
   constexpr double mmu = 0.1056583745;

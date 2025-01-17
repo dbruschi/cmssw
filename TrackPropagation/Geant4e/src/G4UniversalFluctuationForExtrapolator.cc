@@ -66,7 +66,7 @@ G4UniversalFluctuationForExtrapolator::G4UniversalFluctuationForExtrapolator(con
   minLoss(10.*CLHEP::eV)
 {
   rndmarray = new G4double[sizearray];
-  tables = new G4TablesForExtrapolatorCustom(0, 70, 1.*MeV, 10.*TeV, true);
+  tables = new G4TablesForExtrapolatorForCVH(0, 70, 1.*MeV, 10.*TeV, true);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

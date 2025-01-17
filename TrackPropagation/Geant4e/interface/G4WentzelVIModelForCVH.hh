@@ -30,7 +30,7 @@
 // GEANT4 Class header file
 //
 //
-// File name:     G4WentzelVIModelCustom
+// File name:     G4WentzelVIModelForCVH
 //
 // Author:        V.Ivanchenko 
 //
@@ -51,8 +51,8 @@
 // -------------------------------------------------------------------
 //
 
-#ifndef G4WentzelVIModelCustom_h
-#define G4WentzelVIModelCustom_h 1
+#ifndef G4WentzelVIModelForCVH_h
+#define G4WentzelVIModelForCVH_h 1
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -62,14 +62,14 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class G4WentzelVIModelCustom : public G4VMscModel
+class G4WentzelVIModelForCVH : public G4VMscModel
 {
 
 public:
 
-  explicit G4WentzelVIModelCustom(G4bool comb=true, const G4String& nam = "WentzelVIUni");
+  explicit G4WentzelVIModelForCVH(G4bool comb=true, const G4String& nam = "WentzelVIUni");
 
-  ~G4WentzelVIModelCustom() override;
+  ~G4WentzelVIModelForCVH() override;
 
   void Initialise(const G4ParticleDefinition*, const G4DataVector&) override;
 
@@ -126,8 +126,8 @@ public:
 
   void DefineMaterial(const G4MaterialCutsCouple*);
 
-  G4WentzelVIModelCustom & operator=(const G4WentzelVIModelCustom &right) = delete;
-  G4WentzelVIModelCustom(const G4WentzelVIModelCustom&) = delete;
+  G4WentzelVIModelForCVH & operator=(const G4WentzelVIModelForCVH &right) = delete;
+  G4WentzelVIModelForCVH(const G4WentzelVIModelForCVH&) = delete;
 
 protected:
 
@@ -192,7 +192,7 @@ protected:
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-inline void G4WentzelVIModelCustom::SetupParticle(const G4ParticleDefinition* p)
+inline void G4WentzelVIModelForCVH::SetupParticle(const G4ParticleDefinition* p)
 {
   // Initialise mass and charge
   if(p != particle) {
@@ -203,21 +203,21 @@ inline void G4WentzelVIModelCustom::SetupParticle(const G4ParticleDefinition* p)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4WentzelVIModelCustom::SetFixedCut(G4double val)
+inline void G4WentzelVIModelForCVH::SetFixedCut(G4double val)
 {
   fixedCut = val;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline G4double G4WentzelVIModelCustom::GetFixedCut() const
+inline G4double G4WentzelVIModelForCVH::GetFixedCut() const
 {
   return fixedCut;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4WentzelVIModelCustom::SetWVICrossSection(G4WentzelOKandVIxSection* ptr)
+inline void G4WentzelVIModelForCVH::SetWVICrossSection(G4WentzelOKandVIxSection* ptr)
 {
   if(ptr != wokvi) {
     delete wokvi;
@@ -227,28 +227,28 @@ inline void G4WentzelVIModelCustom::SetWVICrossSection(G4WentzelOKandVIxSection*
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline G4WentzelOKandVIxSection* G4WentzelVIModelCustom::GetWVICrossSection()
+inline G4WentzelOKandVIxSection* G4WentzelVIModelForCVH::GetWVICrossSection()
 {
   return wokvi;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline void G4WentzelVIModelCustom::SetUseSecondMoment(G4bool val)
+inline void G4WentzelVIModelForCVH::SetUseSecondMoment(G4bool val)
 {
   useSecondMoment = val;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline G4bool G4WentzelVIModelCustom::UseSecondMoment() const
+inline G4bool G4WentzelVIModelForCVH::UseSecondMoment() const
 {
   return useSecondMoment;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-inline G4PhysicsTable* G4WentzelVIModelCustom::GetSecondMomentTable()
+inline G4PhysicsTable* G4WentzelVIModelForCVH::GetSecondMomentTable()
 {
   return fSecondMoments;
 }
@@ -256,7 +256,7 @@ inline G4PhysicsTable* G4WentzelVIModelCustom::GetSecondMomentTable()
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 inline G4double 
-G4WentzelVIModelCustom::SecondMoment(const G4ParticleDefinition* part,
+G4WentzelVIModelForCVH::SecondMoment(const G4ParticleDefinition* part,
 			       const G4MaterialCutsCouple* couple,
 			       G4double ekin)
 {

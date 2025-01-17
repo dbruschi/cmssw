@@ -25,51 +25,44 @@
 //
 //
 //
+//
 // Class Description:
 //
-// Messenger class for Geant4e processes limiting the step.
+//  Default physics list for GEANT4e (should not be overridden, unless by
+//  experts). No multiple scattering and no production of secondaries.
+//  The energy loss process is G4eMuIonisation or G4EnergyLossForExtrapolator
+//  (depending on the value of the enviromental variable G4EELOSSEXTRAP)
+//  It also defines the geant4e processes to limit the step:
+//  G4eMagneticFieldLimitProcess, G4eStepLimitProcess.
 
 // History:
 // - Created:   P. Arce
-// --------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
-#ifndef TrackPropagation_G4ErrorMessengerCustom_h
-#define TrackPropagation_G4ErrorMessengerCustom_h
+#ifndef TrackPropagation_G4ErrorPhysicsListForCVH_h
+#define TrackPropagation_G4ErrorPhysicsListForCVH_h
 
 #include "globals.hh"
-#include "G4UImessenger.hh"
+#include "G4VUserPhysicsList.hh"
 
-class G4UIdirectory;
-class G4UIcmdWithAString;
-class G4UIcmdWithADoubleAndUnit;
-class G4UIcmdWithADouble;
-class G4ErrorStepLengthLimitProcess;
-class G4ErrorMagFieldLimitProcess;
-class G4ErrorEnergyLossCustom;
-
-//-----------------------------------------------------------------
-
-class G4ErrorMessengerCustom : public G4UImessenger
+class G4ErrorPhysicsListForCVH: public G4VUserPhysicsList
 {
  public:  // with description
-  G4ErrorMessengerCustom(G4ErrorStepLengthLimitProcess* lengthAct,
-                   G4ErrorMagFieldLimitProcess* magAct,
-                   G4ErrorEnergyLossCustom* elossAct);
-  ~G4ErrorMessengerCustom();
+  G4ErrorPhysicsListForCVH();
+  virtual ~G4ErrorPhysicsListForCVH();
 
-  void SetNewValue(G4UIcommand*, G4String);
+ protected:
+  virtual void ConstructParticle();
+  // constructs gamma, e+/-, mu+/- and stable hadrons
 
- private:
-  G4ErrorStepLengthLimitProcess* StepLengthAction;
-  G4ErrorMagFieldLimitProcess* MagFieldAction;
-  G4ErrorEnergyLossCustom* EnergyLossAction;
+  virtual void ConstructProcess();
+  // construct physical processes
 
-  G4UIdirectory* myDir;
-  G4UIdirectory* myDirLimits;
+  virtual void SetCuts();
+  // SetCutsWithDefault
 
-  G4UIcmdWithADoubleAndUnit* StepLengthLimitCmd;
-  G4UIcmdWithADouble* MagFieldLimitCmd;
-  G4UIcmdWithADouble* EnergyLossCmd;
+  virtual void ConstructEM();
+  // constructs electromagnetic processes
 };
 
 #endif

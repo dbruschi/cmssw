@@ -29,10 +29,10 @@
 // ------------------------------------------------------------
 //
 
-#include "TrackPropagation/Geant4e/interface/G4ErrorMessengerCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4ErrorMessengerForCVH.h"
 #include "G4ErrorStepLengthLimitProcess.hh"
 #include "G4ErrorMagFieldLimitProcess.hh"
-#include "TrackPropagation/Geant4e/interface/G4ErrorEnergyLossCustom.h"
+#include "TrackPropagation/Geant4e/interface/G4ErrorEnergyLossForCVH.h"
 
 #include "G4UIdirectory.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
@@ -44,9 +44,9 @@
 #endif
 
 //------------------------------------------------------------------------
-G4ErrorMessengerCustom::G4ErrorMessengerCustom(G4ErrorStepLengthLimitProcess* lengthAct,
+G4ErrorMessengerForCVH::G4ErrorMessengerForCVH(G4ErrorStepLengthLimitProcess* lengthAct,
                                    G4ErrorMagFieldLimitProcess* magAct,
-                                   G4ErrorEnergyLossCustom* elossAct)
+                                   G4ErrorEnergyLossForCVH* elossAct)
   : StepLengthAction(lengthAct)
   , MagFieldAction(magAct)
   , EnergyLossAction(elossAct)
@@ -76,7 +76,7 @@ G4ErrorMessengerCustom::G4ErrorMessengerCustom(G4ErrorStepLengthLimitProcess* le
 }
 
 //------------------------------------------------------------------------
-G4ErrorMessengerCustom::~G4ErrorMessengerCustom()
+G4ErrorMessengerForCVH::~G4ErrorMessengerForCVH()
 {
   delete StepLengthLimitCmd;
   delete MagFieldLimitCmd;
@@ -86,14 +86,14 @@ G4ErrorMessengerCustom::~G4ErrorMessengerCustom()
 }
 
 //------------------------------------------------------------------------
-void G4ErrorMessengerCustom::SetNewValue(G4UIcommand* command,G4String newValue)
+void G4ErrorMessengerForCVH::SetNewValue(G4UIcommand* command,G4String newValue)
 {
   if(command == StepLengthLimitCmd)
   {
 #ifdef G4VERBOSE
     if(G4ErrorPropagatorData::verbose() >= 3)
     {
-      G4cout << " G4ErrorMessengerCustom::StepLengthAction SetStepLimit "
+      G4cout << " G4ErrorMessengerForCVH::StepLengthAction SetStepLimit "
              << StepLengthLimitCmd->GetNewDoubleValue(newValue) << G4endl;
     }
 #endif
@@ -105,7 +105,7 @@ void G4ErrorMessengerCustom::SetNewValue(G4UIcommand* command,G4String newValue)
 #ifdef G4VERBOSE
     if(G4ErrorPropagatorData::verbose() >= 3)
     {
-      G4cout << " G4ErrorMessengerCustom::MagFieldAction SetStepLimit "
+      G4cout << " G4ErrorMessengerForCVH::MagFieldAction SetStepLimit "
              << MagFieldLimitCmd->GetNewDoubleValue(newValue) << G4endl;
     }
 #endif
@@ -116,7 +116,7 @@ void G4ErrorMessengerCustom::SetNewValue(G4UIcommand* command,G4String newValue)
 #ifdef G4VERBOSE
     if(G4ErrorPropagatorData::verbose() >= 3)
     {
-      G4cout << " G4ErrorMessengerCustom::EnergyLossAction SetStepLimit "
+      G4cout << " G4ErrorMessengerForCVH::EnergyLossAction SetStepLimit "
              << EnergyLossCmd->GetNewDoubleValue(newValue) << G4endl;
     }
 #endif

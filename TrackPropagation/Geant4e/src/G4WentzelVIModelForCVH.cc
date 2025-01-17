@@ -29,7 +29,7 @@
 // GEANT4 Class file
 //
 //
-// File name:   G4WentzelVIModelCustom
+// File name:   G4WentzelVIModelForCVH
 //
 // Author:      V.Ivanchenko 
 //
@@ -54,7 +54,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#include "TrackPropagation/Geant4e/interface//G4WentzelVIModelCustom.hh"
+#include "TrackPropagation/Geant4e/interface//G4WentzelVIModelForCVH.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
@@ -74,7 +74,7 @@ const G4double invsqrt12 = 1./std::sqrt(12.);
 const G4double numlimit = 0.1;
 const G4int minNCollisions = 10;
 
-G4WentzelVIModelCustom::G4WentzelVIModelCustom(G4bool comb, const G4String& nam)
+G4WentzelVIModelForCVH::G4WentzelVIModelForCVH(G4bool comb, const G4String& nam)
   : G4VMscModel(nam),
     singleScatteringMode(false),
     isCombined(comb),
@@ -88,7 +88,7 @@ G4WentzelVIModelCustom::G4WentzelVIModelCustom(G4bool comb, const G4String& nam)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4WentzelVIModelCustom::~G4WentzelVIModelCustom()
+G4WentzelVIModelForCVH::~G4WentzelVIModelForCVH()
 {
   delete wokvi;
   if(IsMaster()) {
@@ -99,7 +99,7 @@ G4WentzelVIModelCustom::~G4WentzelVIModelCustom()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
+void G4WentzelVIModelForCVH::Initialise(const G4ParticleDefinition* p,
                                   const G4DataVector& cuts)
 {
   // reset parameters
@@ -112,12 +112,12 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
     if(tet <= 0.0)           { cosThetaMax = 1.0; }
     else if(tet < CLHEP::pi) { cosThetaMax = cos(tet); }
   }
-  //G4cout << "G4WentzelVIModelCustom::Initialise " << p->GetParticleName() 
+  //G4cout << "G4WentzelVIModelForCVH::Initialise " << p->GetParticleName() 
   //	 << " " << this << " " << wokvi << G4endl;
 
   wokvi->Initialise(p, cosThetaMax);
   /* 
-  G4cout << "G4WentzelVIModelCustom: " << particle->GetParticleName()
+  G4cout << "G4WentzelVIModelForCVH: " << particle->GetParticleName()
          << "  1-cos(ThetaLimit)= " << 1 - cosThetaMax 
          << " SingScatFactor= " << ssFactor
          << G4endl;
@@ -143,7 +143,7 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
   G4PhysicsTable* table = GetCrossSectionTable();
   if(useSecondMoment && IsMaster() && nullptr != table) {
 
-    //G4cout << "### G4WentzelVIModelCustom::Initialise: build 2nd moment table "
+    //G4cout << "### G4WentzelVIModelForCVH::Initialise: build 2nd moment table "
     //           << table << G4endl;
     fSecondMoments =  
       G4PhysicsTableHelper::PreparePhysicsTable(fSecondMoments);
@@ -187,16 +187,16 @@ void G4WentzelVIModelCustom::Initialise(const G4ParticleDefinition* p,
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void G4WentzelVIModelCustom::InitialiseLocal(const G4ParticleDefinition*, 
+void G4WentzelVIModelForCVH::InitialiseLocal(const G4ParticleDefinition*, 
                                        G4VEmModel* masterModel)
 {
-  fSecondMoments = static_cast<G4WentzelVIModelCustom*>(masterModel)
+  fSecondMoments = static_cast<G4WentzelVIModelForCVH*>(masterModel)
     ->GetSecondMomentTable(); 
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-void G4WentzelVIModelCustom::DefineMaterial(const G4MaterialCutsCouple* cup) 
+void G4WentzelVIModelForCVH::DefineMaterial(const G4MaterialCutsCouple* cup) 
 { 
   if(cup != currentCouple) {
     currentCouple = cup;
@@ -208,7 +208,7 @@ void G4WentzelVIModelCustom::DefineMaterial(const G4MaterialCutsCouple* cup)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double G4WentzelVIModelCustom::ComputeCrossSectionPerAtom(
+G4double G4WentzelVIModelForCVH::ComputeCrossSectionPerAtom(
                              const G4ParticleDefinition* p,
                              G4double kinEnergy,
                              G4double Z, G4double,
@@ -218,7 +218,7 @@ G4double G4WentzelVIModelCustom::ComputeCrossSectionPerAtom(
   SetupParticle(p); 
   if(kinEnergy < lowEnergyLimit) { return cross; }
   if(nullptr == CurrentCouple()) {
-    G4Exception("G4WentzelVIModelCustom::ComputeCrossSectionPerAtom", "em0011",
+    G4Exception("G4WentzelVIModelForCVH::ComputeCrossSectionPerAtom", "em0011",
                 FatalException, " G4MaterialCutsCouple is not defined");
     return 0.0;
   }
@@ -230,7 +230,7 @@ G4double G4WentzelVIModelCustom::ComputeCrossSectionPerAtom(
     cross = wokvi->ComputeTransportCrossSectionPerAtom(cost);
     /*
     if(p->GetParticleName() == "e-")      
-    G4cout << "G4WentzelVIModelCustom::CS: Z= " << G4int(Z) << " e(MeV)= "<<kinEnergy 
+    G4cout << "G4WentzelVIModelForCVH::CS: Z= " << G4int(Z) << " e(MeV)= "<<kinEnergy 
            << " 1-cosN= " << 1 - cosTetMaxNuc << " cross(bn)= " << cross/barn
            << " " << particle->GetParticleName() << G4endl;
     */
@@ -240,10 +240,10 @@ G4double G4WentzelVIModelCustom::ComputeCrossSectionPerAtom(
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void G4WentzelVIModelCustom::StartTracking(G4Track* track)
+void G4WentzelVIModelForCVH::StartTracking(G4Track* track)
 {
   /*
-  G4cout << "G4WentzelVIModelCustom::StartTracking " << track << "  " << this << "  "
+  G4cout << "G4WentzelVIModelForCVH::StartTracking " << track << "  " << this << "  "
 	 << track->GetParticleDefinition()->GetParticleName() 
 	 << "   workvi: " << wokvi << G4endl; 
   */
@@ -252,7 +252,7 @@ void G4WentzelVIModelCustom::StartTracking(G4Track* track)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double G4WentzelVIModelCustom::ComputeTruePathLengthLimit(
+G4double G4WentzelVIModelForCVH::ComputeTruePathLengthLimit(
                              const G4Track& track,
                              G4double& currentMinimalStep)
 {
@@ -262,7 +262,7 @@ G4double G4WentzelVIModelCustom::ComputeTruePathLengthLimit(
   G4StepStatus stepStatus = sp->GetStepStatus();
   singleScatteringMode = false;
 
-  //G4cout << "G4WentzelVIModelCustom::ComputeTruePathLengthLimit stepStatus= " 
+  //G4cout << "G4WentzelVIModelForCVH::ComputeTruePathLengthLimit stepStatus= " 
   //         << stepStatus << "  " << track.GetDefinition()->GetParticleName() 
   //         << G4endl;
 
@@ -350,7 +350,7 @@ G4double G4WentzelVIModelCustom::ComputeTruePathLengthLimit(
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double G4WentzelVIModelCustom::ComputeGeomPathLength(G4double truelength)
+G4double G4WentzelVIModelForCVH::ComputeGeomPathLength(G4double truelength)
 {
   zPathLength = tPathLength = truelength;
 
@@ -394,7 +394,7 @@ G4double G4WentzelVIModelCustom::ComputeGeomPathLength(G4double truelength)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double G4WentzelVIModelCustom::ComputeTrueStepLength(G4double geomStepLength)
+G4double G4WentzelVIModelForCVH::ComputeTrueStepLength(G4double geomStepLength)
 {
   // initialisation of single scattering x-section
   /*
@@ -491,11 +491,11 @@ G4double G4WentzelVIModelCustom::ComputeTrueStepLength(G4double geomStepLength)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 G4ThreeVector& 
-G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
+G4WentzelVIModelForCVH::SampleScattering(const G4ThreeVector& oldDirection,
                                    G4double /*safety*/)
 {
   fDisplacement.set(0.0,0.0,0.0);
-  //G4cout << "!##! G4WentzelVIModelCustom::SampleScattering for " 
+  //G4cout << "!##! G4WentzelVIModelForCVH::SampleScattering for " 
   //         << particle->GetParticleName() << G4endl;
 
   // ignore scattering for zero step length and energy below the limit
@@ -676,7 +676,7 @@ G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
     
   dir.rotateUz(oldDirection);
 
-  //G4cout<<"G4WentzelVIModelCustom sampling is done 1-cost= "<< 1.-dir.z()<<G4endl;
+  //G4cout<<"G4WentzelVIModelForCVH sampling is done 1-cost= "<< 1.-dir.z()<<G4endl;
   // end of sampling -------------------------------
 
   fParticleChange->ProposeMomentumDirection(dir);
@@ -695,12 +695,12 @@ G4WentzelVIModelCustom::SampleScattering(const G4ThreeVector& oldDirection,
                 << G4endl;
   */
 
-  //G4cout<< "G4WentzelVIModelCustom::SampleScattering end NewDir= " << dir<< G4endl;
+  //G4cout<< "G4WentzelVIModelForCVH::SampleScattering end NewDir= " << dir<< G4endl;
   return fDisplacement;
 }
 
 G4ThreeVector
-G4WentzelVIModelCustom::SampleScatteringTest(const G4ThreeVector& oldDirection,
+G4WentzelVIModelForCVH::SampleScatteringTest(const G4ThreeVector& oldDirection,
                                    G4double /*safety*/)
 {
 
@@ -708,7 +708,7 @@ G4WentzelVIModelCustom::SampleScatteringTest(const G4ThreeVector& oldDirection,
 
 
   fDisplacement.set(0.0,0.0,0.0);
-  //G4cout << "!##! G4WentzelVIModelCustom::SampleScattering for "
+  //G4cout << "!##! G4WentzelVIModelForCVH::SampleScattering for "
   //         << particle->GetParticleName() << G4endl;
 
   // ignore scattering for zero step length and energy below the limit
@@ -896,7 +896,7 @@ G4WentzelVIModelCustom::SampleScatteringTest(const G4ThreeVector& oldDirection,
 
   dir.rotateUz(oldDirection);
 
-  //G4cout<<"G4WentzelVIModelCustom sampling is done 1-cost= "<< 1.-dir.z()<<G4endl;
+  //G4cout<<"G4WentzelVIModelForCVH sampling is done 1-cost= "<< 1.-dir.z()<<G4endl;
   // end of sampling -------------------------------
 
   fParticleChange->ProposeMomentumDirection(dir);
@@ -915,12 +915,12 @@ G4WentzelVIModelCustom::SampleScatteringTest(const G4ThreeVector& oldDirection,
                 << G4endl;
   */
 
-  //G4cout<< "G4WentzelVIModelCustom::SampleScattering end NewDir= " << dir<< G4endl;
+  //G4cout<< "G4WentzelVIModelForCVH::SampleScattering end NewDir= " << dir<< G4endl;
 //   return fDisplacement;
   return dir;
 }
 
-double G4WentzelVIModelCustom::ProjectedVariance() const {
+double G4WentzelVIModelForCVH::ProjectedVariance() const {
 //   return 1.5*tPathLength*tPathLength/lambdaeff/lambdaeff;
   std::cout << "tPathLength = " << tPathLength << " lambdeff = " << lambdaeff << std::endl;
   return tPathLength/lambdaeff;
@@ -929,7 +929,7 @@ double G4WentzelVIModelCustom::ProjectedVariance() const {
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double G4WentzelVIModelCustom::ComputeTransportXSectionPerVolume(G4double cosTheta)
+G4double G4WentzelVIModelForCVH::ComputeTransportXSectionPerVolume(G4double cosTheta)
 {
   // prepare recomputation of x-sections
   const G4ElementVector* theElementVector = currentMaterial->GetElementVector();
@@ -984,7 +984,7 @@ G4double G4WentzelVIModelCustom::ComputeTransportXSectionPerVolume(G4double cosT
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double G4WentzelVIModelCustom::ComputeSecondMoment(const G4ParticleDefinition* p,
+G4double G4WentzelVIModelForCVH::ComputeSecondMoment(const G4ParticleDefinition* p,
 					       G4double kinEnergy)
 {
   G4double xs = 0.0;
@@ -1014,7 +1014,7 @@ G4double G4WentzelVIModelCustom::ComputeSecondMoment(const G4ParticleDefinition*
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
-void G4WentzelVIModelCustom::SetSingleScatteringFactor(G4double val)
+void G4WentzelVIModelForCVH::SetSingleScatteringFactor(G4double val)
 {
   if(val > 0.05) {
     ssFactor = val;

@@ -35,24 +35,24 @@
 //   Modified:
 //
 
-#ifndef TrackPropagation_G4ErrorEnergyLossCustom_h
-#define TrackPropagation_G4ErrorEnergyLossCustom_h
+#ifndef TrackPropagation_G4ErrorEnergyLossForCVH_h
+#define TrackPropagation_G4ErrorEnergyLossForCVH_h
 
 #include "globals.hh"
 #include "G4VContinuousProcess.hh"
 #include "G4ProcessType.hh"
 
-class G4EnergyLossForExtrapolatorCustom;
+class G4EnergyLossForExtrapolatorForCVH;
 
-class G4ErrorEnergyLossCustom : public G4VContinuousProcess
+class G4ErrorEnergyLossForCVH : public G4VContinuousProcess
 {
 
 public: 
 
-  explicit G4ErrorEnergyLossCustom(const G4String& processName = "G4ErrorEnergyLossCustom",
+  explicit G4ErrorEnergyLossForCVH(const G4String& processName = "G4ErrorEnergyLossForCVH",
                              G4ProcessType type = fElectromagnetic);
 
-  ~G4ErrorEnergyLossCustom() override;
+  ~G4ErrorEnergyLossForCVH() override;
 
   G4bool IsApplicable(const G4ParticleDefinition& aParticleType) override;
   // Returns true -> 'is applicable', for all charged particles.
@@ -70,14 +70,14 @@ public:
   inline void SetStepLimit( G4double val ) { theStepLimit = val; }
 
   // copy constructor and hide assignment operator
-  G4ErrorEnergyLossCustom(G4ErrorEnergyLossCustom &) = delete;
-  G4ErrorEnergyLossCustom & operator=(const G4ErrorEnergyLossCustom &right) = delete;
+  G4ErrorEnergyLossForCVH(G4ErrorEnergyLossForCVH &) = delete;
+  G4ErrorEnergyLossForCVH & operator=(const G4ErrorEnergyLossForCVH &right) = delete;
 
 private:
 
   void InstantiateEforExtrapolator();
 
-  G4EnergyLossForExtrapolatorCustom* theELossForExtrapolator;
+  G4EnergyLossForExtrapolatorForCVH* theELossForExtrapolator;
 
   G4double theStepLimit;
   G4double theFractionLimit = 0.2;
