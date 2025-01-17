@@ -65,13 +65,15 @@ process.GlobalTag = GlobalTag(process.GlobalTag, options.globalTag, '')
 # track refit stuff
 from TrackPropagation.Geant4e.geantRefit_cff import geopro
 process.load("TrackPropagation.Geant4e.geantRefit_cff")
+process.Geant4ePropagator.ForCVH = True
 from RecoTracker.TransientTrackingRecHit.TTRHBuilders_cff import *
 from RecoLocalTracker.SiPixelRecHits.PixelCPEESProducers_cff import *
 
-import RecoTracker.TrackProducer.trackProducerFromPatMuons_cvh_cfi
-process.tracksFromMuons  = RecoTracker.TrackProducer.trackProducerFromPatMuons_cvh_cfi.trackProducerFromPatMuons.clone(
+import RecoTracker.TrackProducer.trackProducerFromPatMuons_cfi
+process.tracksFromMuons  = RecoTracker.TrackProducer.trackProducerFromPatMuons_cfi.trackProducerFromPatMuons.clone(
     src = "slimmedMuons",
-    innerTrackOnly = True
+    innerTrackOnly = True,
+    ptMin = 10.
 )
 
 process.trackrefit = cms.EDProducer('ResidualGlobalCorrectionMakerG4e',
