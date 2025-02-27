@@ -144,6 +144,7 @@ private:
 
   MonitorElement* DistanceOfClosestApproachToPVH_;
   MonitorElement* DistanceOfClosestApproachToPVZoomedH_;
+  MonitorElement* DistanceOfClosestApproachToPVto10cmH_;
   MonitorElement* DistanceOfClosestApproachToPVVsPhiH_;
   MonitorElement* xPointOfClosestApproachVsZ0wrtPVH_;
   MonitorElement* yPointOfClosestApproachVsZ0wrtPVH_;
@@ -160,16 +161,23 @@ private:
 
   MonitorElement* ip2dToBSH_;
   MonitorElement* sip2dToBSH_;
+  MonitorElement* sip2dToBSto100H_;
 
   MonitorElement* ip3dToPVH_;
   MonitorElement* iperr3dToPVH_;
   MonitorElement* iperr3dToPVWtH_;
   MonitorElement* sip3dToPVH_;
+  MonitorElement* sip3dToPVto100H_;
   MonitorElement* sip3dToBSH_;
+  MonitorElement* sip3dToBSto100H_;
   MonitorElement* sip2dToPVH_;
+  MonitorElement* sip2dToPVto100H_;
   MonitorElement* sip2dToPVWtH_;
+  MonitorElement* sip2dToPVWtto100H_;
   MonitorElement* sipDxyToPVH_;
+  MonitorElement* sipDxyToPVto100H_;
   MonitorElement* sipDzToPVH_;
+  MonitorElement* sipDzToPVto100H_;
 
   MonitorElement* ip3dToPV2validpixelhitsH_;
   MonitorElement* ip3dToBS2validpixelhitsH_;
@@ -238,6 +246,7 @@ private:
   MonitorElement* nStripTECH_;
   MonitorElement* nStripTIDH_;
   MonitorElement* nTracksH_;
+  MonitorElement* nTracks2DH_;
 
   // MC only
   MonitorElement* bunchCrossingH_;
@@ -273,13 +282,21 @@ private:
   MonitorElement* nValidHitsVsPhiH_;
 
   MonitorElement* nValidHitsPixVsEtaH_;
+  MonitorElement* nValidHitsPix2DH_;
   MonitorElement* nValidHitsPixBVsEtaH_;
+  MonitorElement* nValidHitsPixB2DH_;
   MonitorElement* nValidHitsPixEVsEtaH_;
+  MonitorElement* nValidHitsPixE2DH_;
   MonitorElement* nValidHitsStripVsEtaH_;
+  MonitorElement* nValidHitsStrip2DH_;
   MonitorElement* nValidHitsTIBVsEtaH_;
+  MonitorElement* nValidHitsTIB2DH_;
   MonitorElement* nValidHitsTOBVsEtaH_;
+  MonitorElement* nValidHitsTOB2DH_;
   MonitorElement* nValidHitsTECVsEtaH_;
+  MonitorElement* nValidHitsTEC2DH_;
   MonitorElement* nValidHitsTIDVsEtaH_;
+  MonitorElement* nValidHitsTID2DH_;
 
   MonitorElement* nValidHitsPixVsPhiH_;
   MonitorElement* nValidHitsPixBVsPhiH_;
@@ -537,13 +554,21 @@ StandaloneTrackMonitor::StandaloneTrackMonitor(const edm::ParameterSet& ps)
   nValidHitsVsnVtxH_ = nullptr;
 
   nValidHitsPixVsEtaH_ = nullptr;
+  nValidHitsPix2DH_ = nullptr;
   nValidHitsPixBVsEtaH_ = nullptr;
+  nValidHitsPixB2DH_ = nullptr;
   nValidHitsPixEVsEtaH_ = nullptr;
+  nValidHitsPixE2DH_ = nullptr;
   nValidHitsStripVsEtaH_ = nullptr;
+  nValidHitsStrip2DH_ = nullptr;
   nValidHitsTIBVsEtaH_ = nullptr;
+  nValidHitsTIB2DH_ = nullptr;
   nValidHitsTOBVsEtaH_ = nullptr;
+  nValidHitsTOB2DH_ = nullptr;
   nValidHitsTECVsEtaH_ = nullptr;
+  nValidHitsTEC2DH_ = nullptr;
   nValidHitsTIDVsEtaH_ = nullptr;
+  nValidHitsTID2DH_ = nullptr;
 
   nValidHitsPixVsPhiH_ = nullptr;
   nValidHitsPixBVsPhiH_ = nullptr;
@@ -685,6 +710,8 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
         ibook.book1DD("DistanceOfClosestApproachToPV", "DistanceOfClosestApproachToPV", 1000, -1.0, 1.0);
     DistanceOfClosestApproachToPVZoomedH_ =
         ibook.book1DD("DistanceOfClosestApproachToPVZoomed", "DistanceOfClosestApproachToPV", 1000, -0.1, 0.1);
+    DistanceOfClosestApproachToPVto10cmH_ =
+        ibook.book1DD("DistanceOfClosestApproachToPVto10cm", "DistanceOfClosestApproachToPV", 10000, -10., 10.);
     DistanceOfClosestApproachToPVVsPhiH_ = ibook.bookProfile(
         "DistanceOfClosestApproachToPVVsPhi", "DistanceOfClosestApproachToPVVsPhi", 100, -3.5, 3.5, 0.0, 0.0, "g");
     xPointOfClosestApproachVsZ0wrtPVH_ = ibook.bookProfile(
@@ -710,7 +737,9 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     iperr3dToPVH_ = ibook.book1DD("iperr3dToPV", "IP error in 3d To PV", niperrbins, iperrbinning);
     iperr3dToBSH_ = ibook.book1DD("iperr3dToBS", "IP error in 3d To BS", niperrbins, iperrbinning);
     sip3dToPVH_ = ibook.book1DD("sip3dToPV", "IP significance in 3d To PV", 200, -10, 10);
+    sip3dToPVto100H_ = ibook.book1DD("sip3dToPVto100", "IP significance in 3d To PV", 2000, -100, 100);
     sip3dToBSH_ = ibook.book1DD("sip3dToBS", "IP significance in 3d To BS", 200, -10, 10);
+    sip3dToBSto100H_ = ibook.book1DD("sip3dToBSto100", "IP significance in 3d To BS", 2000, -100, 100);
 
     ip3dToPV2validpixelhitsH_ =
         ibook.book1DD("ip3dToPV2validpixelhits", "IP in 3d To PV (nValidPixelHits>2)", 200, -0.20, 0.20);
@@ -728,13 +757,18 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     ip2dToBSH_ = ibook.book1DD("ip2dToBS", "IP in 2d To BS", 1000, -1., 1.);  //Beamspot
     iperr2dToBSH_ = ibook.book1DD("iperr2dToBS", "IP error in 2d To BS", niperrbins, iperrbinning);
     sip2dToBSH_ = ibook.book1DD("sip2dToBS", "IP significance in 2d To BS", 200, -10, 10);
+    sip2dToBSto100H_ = ibook.book1DD("sip2dToBSto100", "IP significance in 2d To BS", 2000, -100, 100);
 
     iperr3dToPVWtH_ = ibook.book1DD("iperr3dToPVWt", "IP error in 3d To PV", niperrbins, iperrbinning);
     sip2dToPVH_ = ibook.book1DD("sip2dToPV", "IP significance in 2d To PV", 200, -10, 10);
+    sip2dToPVto100H_ = ibook.book1DD("sip2dToPVto100", "IP significance in 2d To PV", 2000, -100, 100);
 
     sip2dToPVWtH_ = ibook.book1DD("sip2dToPVWt", "IP significance in 2d To PV", 200, -10, 10);
+    sip2dToPVWtto100H_ = ibook.book1DD("sip2dToPVWtto100", "IP significance in 2d To PV", 2000, -100, 100);
     sipDxyToPVH_ = ibook.book1DD("sipDxyToPV", "IP significance in dxy To PV", 100, -10, 10);
+    sipDxyToPVto100H_ = ibook.book1DD("sipDxyToPVto100", "IP significance in dxy To PV", 1000, -100, 100);
     sipDzToPVH_ = ibook.book1DD("sipDzToPV", "IP significance in dz To PV", 100, -10, 10);
+    sipDzToPVto100H_ = ibook.book1DD("sipDzToPVto100", "IP significance in dz To PV", 1000, -100, 100);
 
     nallHitsH_ = ibook.book1DD("nallHits", "No. of All Hits", 60, -0.5, 59.5);
     ntrackerHitsH_ = ibook.book1DD("ntrackerHits", "No. of Tracker Hits", 60, -0.5, 59.5);
@@ -807,6 +841,14 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     nStripTECH_ = ibook.book1DD("nHitStripTEC", "No. of hits in Strip TEC per Track", 30, 0, 30.0);
     nStripTIDH_ = ibook.book1DD("nHitStripTID", "No. of hits in Strip TID per Tracks", 30, 0, 30.0);
     nTracksH_ = ibook.book1DD("nTracks", "No. of Tracks", 1200, -0.5, 1199.5);
+    nTracks2DH_ = ibook.book2D("nTracks2D",
+                                           "Track vs Eta Phi",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"));
     nJet_ = ibook.book1DD("nJet", "Number of Jets", 101, -0.5, 100.5);
     Jet_pt_ = ibook.book1DD("Jet_pt", "Jet p_{T}", 200, 0., 200.);
     Jet_eta_ = ibook.book1DD("Jet_eta", "Jet #eta", 100, -5.2, 5.2);
@@ -969,6 +1011,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                            0.0,
                                            0.0,
                                            "g");
+  nValidHitsPix2DH_ = ibook.book3D("nValidHitsPix2D",
+                                           "Number of Valid Hits in Pixel 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           20, 0, 20.);
   nValidHitsPixBVsEtaH_ = ibook.bookProfile("nValidHitsPixBVsEta",
                                             "Number of Valid Hits in Pixel Barrel Vs Eta",
                                             TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -977,6 +1028,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                             0.0,
                                             0.0,
                                             "g");
+  nValidHitsPixB2DH_ = ibook.book3D("nValidHitsPixB2D",
+                                           "Number of Valid Hits in Pixel Barrel 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           20, 0, 20.);
   nValidHitsPixEVsEtaH_ = ibook.bookProfile("nValidHitsPixEVsEta",
                                             "Number of Valid Hits in Pixel Endcap Vs Eta",
                                             TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -985,6 +1045,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                             0.0,
                                             0.0,
                                             "g");
+  nValidHitsPixE2DH_ = ibook.book3D("nValidHitsPixE2D",
+                                           "Number of Valid Hits in Pixel Endcap 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           20, 0, 20.);
   nValidHitsStripVsEtaH_ = ibook.bookProfile("nValidHitsStripVsEta",
                                              "Number of Valid Hits in SiStrip Vs Eta",
                                              TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -993,6 +1062,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                              0.0,
                                              0.0,
                                              "g");
+  nValidHitsStrip2DH_ = ibook.book3D("nValidHitsStrip2D",
+                                           "Number of Valid Hits in Strip 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           30, 0, 30.);
   nValidHitsTIBVsEtaH_ = ibook.bookProfile("nValidHitsTIBVsEta",
                                            "Number of Valid Hits in TIB Vs Eta",
                                            TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -1001,6 +1079,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                            0.0,
                                            0.0,
                                            "g");
+  nValidHitsTIB2DH_ = ibook.book3D("nValidHitsTIB2D",
+                                           "Number of Valid Hits in TIB 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           30, 0, 30.);
   nValidHitsTOBVsEtaH_ = ibook.bookProfile("nValidHitsTOBVsEta",
                                            "Number of Valid Hits in TOB Vs Eta",
                                            TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -1009,6 +1096,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                            0.0,
                                            0.0,
                                            "g");
+  nValidHitsTOB2DH_ = ibook.book3D("nValidHitsTOB2D",
+                                           "Number of Valid Hits in TOB 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           30, 0, 30.);
   nValidHitsTECVsEtaH_ = ibook.bookProfile("nValidHitsTECVsEta",
                                            "Number of Valid Hits in TEC Vs Eta",
                                            TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -1017,6 +1113,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                            0.0,
                                            0.0,
                                            "g");
+  nValidHitsTEC2DH_ = ibook.book3D("nValidHitsTEC2D",
+                                           "Number of Valid Hits in TEC 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           30, 0, 30.);
   nValidHitsTIDVsEtaH_ = ibook.bookProfile("nValidHitsTIDVsEta",
                                            "Number of Valid Hits in TID Vs Eta",
                                            TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
@@ -1025,6 +1130,15 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
                                            0.0,
                                            0.0,
                                            "g");
+  nValidHitsTID2DH_ = ibook.book3D("nValidHitsTID2D",
+                                           "Number of Valid Hits in TID 2D",
+                                           TrackEtaHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmin"),
+                                           TrackEtaHistoPar_.getParameter<double>("Xmax"),
+                                           TrackPhiHistoPar_.getParameter<int32_t>("Xbins"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmin"),
+                                           TrackPhiHistoPar_.getParameter<double>("Xmax"),
+                                           30, 0, 30.);
 
   nValidHitsPixVsPhiH_ = ibook.bookProfile("nValidHitsPixVsPhi",
                                            "Number of Valid Hits in Pixel Vs Phi",
@@ -1467,6 +1581,11 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
       nValidHitsTOBVsPhiH_->Fill(phi, nValidTOBHits);
       nValidHitsTECVsPhiH_->Fill(phi, nValidTECHits);
       nValidHitsTIDVsPhiH_->Fill(phi, nValidTIDHits);
+      nValidHitsPix2DH_->Fill(eta, phi, nValidPixelHits, wfac);
+      nValidHitsPixB2DH_->Fill(eta, phi, nValidPixelBHits, wfac);
+      nValidHitsPixE2DH_->Fill(eta, phi, nValidPixelEHits, wfac);
+
+      nTracks2DH_->Fill(eta, phi, wfac);
 
       int nLostHits = track.numberOfLostHits();
       int nMissingExpectedInnerHits = hitp.numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS);
@@ -1718,6 +1837,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
         DistanceOfClosestApproachToPVH_->Fill(distanceOfClosestApproachToPV, wfac);
         DistanceOfClosestApproachToPVZoomedH_->Fill(distanceOfClosestApproachToPV, wfac);
+        DistanceOfClosestApproachToPVto10cmH_->Fill(distanceOfClosestApproachToPV, wfac);
         DistanceOfClosestApproachToPVVsPhiH_->Fill(phi, distanceOfClosestApproachToPV);
         xPointOfClosestApproachVsZ0wrtPVH_->Fill(positionZ0, xPointOfClosestApproachwrtPV);
         yPointOfClosestApproachVsZ0wrtPVH_->Fill(positionZ0, yPointOfClosestApproachwrtPV);
@@ -1734,12 +1854,19 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
 
         iperr3dToPVWtH_->Fill(iperr3dToPV, wfac);
         sip3dToPVH_->Fill(sip3dToPV, wfac);
+        sip3dToPVto100H_->Fill(sip3dToPV, wfac);
         sip2dToPVH_->Fill(sip2dToPV, wfac);
+        sip2dToPVto100H_->Fill(sip2dToPV, wfac);
         sip3dToBSH_->Fill(sip3dToBS, wfac);
+        sip3dToBSto100H_->Fill(sip3dToBS, wfac);
         sip2dToBSH_->Fill(sip2dToBS, wfac);
+        sip2dToBSto100H_->Fill(sip2dToBS, wfac);
         sip2dToPVWtH_->Fill(sip2dToPV, wfac);
+        sip2dToPVWtto100H_->Fill(sip2dToPV, wfac);
         sipDxyToPVH_->Fill(sipDxyToPV, wfac);
+        sipDxyToPVto100H_->Fill(sipDxyToPV, wfac);
         sipDzToPVH_->Fill(sipDzToPV, wfac);
+        sipDzToPVto100H_->Fill(sipDzToPV, wfac);
 
         if (nValidPixelHits >= 2) {
           ip3dToPV2validpixelhitsH_->Fill(ip3dToPV, wfac);
