@@ -145,6 +145,7 @@ private:
   MonitorElement* DistanceOfClosestApproachToPVH_;
   MonitorElement* DistanceOfClosestApproachToPVZoomedH_;
   MonitorElement* DistanceOfClosestApproachToPVto10cmH_;
+  MonitorElement* DistanceOfClosestApproachToPVto10cm2DH_;
   MonitorElement* DistanceOfClosestApproachToPVVsPhiH_;
   MonitorElement* xPointOfClosestApproachVsZ0wrtPVH_;
   MonitorElement* yPointOfClosestApproachVsZ0wrtPVH_;
@@ -162,22 +163,29 @@ private:
   MonitorElement* ip2dToBSH_;
   MonitorElement* sip2dToBSH_;
   MonitorElement* sip2dToBSto100H_;
+  MonitorElement* sip2dToBSto1002DH_;
 
   MonitorElement* ip3dToPVH_;
   MonitorElement* iperr3dToPVH_;
   MonitorElement* iperr3dToPVWtH_;
   MonitorElement* sip3dToPVH_;
   MonitorElement* sip3dToPVto100H_;
+  MonitorElement* sip3dToPVto1002DH_;
   MonitorElement* sip3dToBSH_;
   MonitorElement* sip3dToBSto100H_;
+  MonitorElement* sip3dToBSto1002DH_;
   MonitorElement* sip2dToPVH_;
   MonitorElement* sip2dToPVto100H_;
+  MonitorElement* sip2dToPVto1002DH_;
   MonitorElement* sip2dToPVWtH_;
   MonitorElement* sip2dToPVWtto100H_;
+  MonitorElement* sip2dToPVWtto1002DH_;
   MonitorElement* sipDxyToPVH_;
   MonitorElement* sipDxyToPVto100H_;
+  MonitorElement* sipDxyToPVto1002DH_;
   MonitorElement* sipDzToPVH_;
   MonitorElement* sipDzToPVto100H_;
+  MonitorElement* sipDzToPVto1002DH_;
 
   MonitorElement* ip3dToPV2validpixelhitsH_;
   MonitorElement* ip3dToBS2validpixelhitsH_;
@@ -712,6 +720,8 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
         ibook.book1DD("DistanceOfClosestApproachToPVZoomed", "DistanceOfClosestApproachToPV", 1000, -0.1, 0.1);
     DistanceOfClosestApproachToPVto10cmH_ =
         ibook.book1DD("DistanceOfClosestApproachToPVto10cm", "DistanceOfClosestApproachToPV", 10000, -10., 10.);
+    DistanceOfClosestApproachToPVto10cm2DH_ =
+        ibook.book3D("DistanceOfClosestApproachToPVto10cm2D", "DistanceOfClosestApproachToPV", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 10000, -10., 10.);
     DistanceOfClosestApproachToPVVsPhiH_ = ibook.bookProfile(
         "DistanceOfClosestApproachToPVVsPhi", "DistanceOfClosestApproachToPVVsPhi", 100, -3.5, 3.5, 0.0, 0.0, "g");
     xPointOfClosestApproachVsZ0wrtPVH_ = ibook.bookProfile(
@@ -738,8 +748,10 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     iperr3dToBSH_ = ibook.book1DD("iperr3dToBS", "IP error in 3d To BS", niperrbins, iperrbinning);
     sip3dToPVH_ = ibook.book1DD("sip3dToPV", "IP significance in 3d To PV", 200, -10, 10);
     sip3dToPVto100H_ = ibook.book1DD("sip3dToPVto100", "IP significance in 3d To PV", 2000, -100, 100);
+    sip3dToPVto1002DH_ = ibook.book3D("sip3dToPVto1002D", "IP significance in 3d To PV", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
     sip3dToBSH_ = ibook.book1DD("sip3dToBS", "IP significance in 3d To BS", 200, -10, 10);
     sip3dToBSto100H_ = ibook.book1DD("sip3dToBSto100", "IP significance in 3d To BS", 2000, -100, 100);
+    sip3dToBSto1002DH_ = ibook.book3D("sip3dToBSto1002D", "IP significance in 3d To BS", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
 
     ip3dToPV2validpixelhitsH_ =
         ibook.book1DD("ip3dToPV2validpixelhits", "IP in 3d To PV (nValidPixelHits>2)", 200, -0.20, 0.20);
@@ -758,17 +770,22 @@ void StandaloneTrackMonitor::bookHistograms(DQMStore::IBooker& ibook,
     iperr2dToBSH_ = ibook.book1DD("iperr2dToBS", "IP error in 2d To BS", niperrbins, iperrbinning);
     sip2dToBSH_ = ibook.book1DD("sip2dToBS", "IP significance in 2d To BS", 200, -10, 10);
     sip2dToBSto100H_ = ibook.book1DD("sip2dToBSto100", "IP significance in 2d To BS", 2000, -100, 100);
+    sip2dToBSto1002DH_ = ibook.book3D("sip2dToBSto1002D", "IP significance in 2d To BS", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
 
     iperr3dToPVWtH_ = ibook.book1DD("iperr3dToPVWt", "IP error in 3d To PV", niperrbins, iperrbinning);
     sip2dToPVH_ = ibook.book1DD("sip2dToPV", "IP significance in 2d To PV", 200, -10, 10);
     sip2dToPVto100H_ = ibook.book1DD("sip2dToPVto100", "IP significance in 2d To PV", 2000, -100, 100);
+    sip2dToPVto1002DH_ = ibook.book3D("sip2dToPVto1002D", "IP significance in 2d To PV", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
 
     sip2dToPVWtH_ = ibook.book1DD("sip2dToPVWt", "IP significance in 2d To PV", 200, -10, 10);
     sip2dToPVWtto100H_ = ibook.book1DD("sip2dToPVWtto100", "IP significance in 2d To PV", 2000, -100, 100);
+    sip2dToPVWtto1002DH_ = ibook.book3D("sip2dToPVWtto1002D", "IP significance in 2d To PV", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
     sipDxyToPVH_ = ibook.book1DD("sipDxyToPV", "IP significance in dxy To PV", 100, -10, 10);
     sipDxyToPVto100H_ = ibook.book1DD("sipDxyToPVto100", "IP significance in dxy To PV", 1000, -100, 100);
+    sipDxyToPVto1002DH_ = ibook.book3D("sipDxyToPVto1002D", "IP significance in dxy To PV", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
     sipDzToPVH_ = ibook.book1DD("sipDzToPV", "IP significance in dz To PV", 100, -10, 10);
     sipDzToPVto100H_ = ibook.book1DD("sipDzToPVto100", "IP significance in dz To PV", 1000, -100, 100);
+    sipDzToPVto1002DH_ = ibook.book3D("sipDzToPVto1002D", "IP significance in dz To PV", TrackEtaHistoPar_.getParameter<int32_t>("Xbins"), TrackEtaHistoPar_.getParameter<double>("Xmin"), TrackEtaHistoPar_.getParameter<double>("Xmax"), TrackPhiHistoPar_.getParameter<int32_t>("Xbins"), TrackPhiHistoPar_.getParameter<double>("Xmin"), TrackPhiHistoPar_.getParameter<double>("Xmax"), 2000, -100, 100);
 
     nallHitsH_ = ibook.book1DD("nallHits", "No. of All Hits", 60, -0.5, 59.5);
     ntrackerHitsH_ = ibook.book1DD("ntrackerHits", "No. of Tracker Hits", 60, -0.5, 59.5);
@@ -1584,6 +1601,11 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
       nValidHitsPix2DH_->Fill(eta, phi, nValidPixelHits, wfac);
       nValidHitsPixB2DH_->Fill(eta, phi, nValidPixelBHits, wfac);
       nValidHitsPixE2DH_->Fill(eta, phi, nValidPixelEHits, wfac);
+      nValidHitsStrip2DH_->Fill(eta, phi, nValidStripHits, wfac);
+      nValidHitsTIB2DH_->Fill(eta, phi, nValidTIBHits, wfac);
+      nValidHitsTOB2DH_->Fill(eta, phi, nValidTOBHits, wfac);
+      nValidHitsTEC2DH_->Fill(eta, phi, nValidTECHits, wfac);
+      nValidHitsTID2DH_->Fill(eta, phi, nValidTIDHits, wfac);
 
       nTracks2DH_->Fill(eta, phi, wfac);
 
@@ -1838,6 +1860,7 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
         DistanceOfClosestApproachToPVH_->Fill(distanceOfClosestApproachToPV, wfac);
         DistanceOfClosestApproachToPVZoomedH_->Fill(distanceOfClosestApproachToPV, wfac);
         DistanceOfClosestApproachToPVto10cmH_->Fill(distanceOfClosestApproachToPV, wfac);
+        DistanceOfClosestApproachToPVto10cm2DH_->Fill(eta, phi, distanceOfClosestApproachToPV, wfac);
         DistanceOfClosestApproachToPVVsPhiH_->Fill(phi, distanceOfClosestApproachToPV);
         xPointOfClosestApproachVsZ0wrtPVH_->Fill(positionZ0, xPointOfClosestApproachwrtPV);
         yPointOfClosestApproachVsZ0wrtPVH_->Fill(positionZ0, yPointOfClosestApproachwrtPV);
@@ -1855,18 +1878,25 @@ void StandaloneTrackMonitor::analyze(edm::Event const& iEvent, edm::EventSetup c
         iperr3dToPVWtH_->Fill(iperr3dToPV, wfac);
         sip3dToPVH_->Fill(sip3dToPV, wfac);
         sip3dToPVto100H_->Fill(sip3dToPV, wfac);
+        sip3dToPVto1002DH_->Fill(eta, phi, sip3dToPV, wfac);
         sip2dToPVH_->Fill(sip2dToPV, wfac);
         sip2dToPVto100H_->Fill(sip2dToPV, wfac);
+        sip2dToPVto1002DH_->Fill(eta, phi, sip2dToPV, wfac);
         sip3dToBSH_->Fill(sip3dToBS, wfac);
         sip3dToBSto100H_->Fill(sip3dToBS, wfac);
+        sip3dToBSto1002DH_->Fill(eta, phi, sip3dToBS, wfac);
         sip2dToBSH_->Fill(sip2dToBS, wfac);
         sip2dToBSto100H_->Fill(sip2dToBS, wfac);
+        sip2dToBSto1002DH_->Fill(eta, phi, sip2dToBS, wfac);
         sip2dToPVWtH_->Fill(sip2dToPV, wfac);
         sip2dToPVWtto100H_->Fill(sip2dToPV, wfac);
+        sip2dToPVWtto1002DH_->Fill(eta, phi, sip2dToPV, wfac);
         sipDxyToPVH_->Fill(sipDxyToPV, wfac);
         sipDxyToPVto100H_->Fill(sipDxyToPV, wfac);
+        sipDxyToPVto1002DH_->Fill(eta, phi, sipDxyToPV, wfac);
         sipDzToPVH_->Fill(sipDzToPV, wfac);
         sipDzToPVto100H_->Fill(sipDzToPV, wfac);
+        sipDzToPVto1002DH_->Fill(eta, phi, sipDzToPV, wfac);
 
         if (nValidPixelHits >= 2) {
           ip3dToPV2validpixelhitsH_->Fill(ip3dToPV, wfac);
