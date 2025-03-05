@@ -19,6 +19,13 @@ selectedTracks = cms.EDFilter("TrackSelector",
                               filter = cms.bool(True)
                               )
 
+selectedTracksFPixHole = cms.EDFilter("TrackSelector",
+                                      src = cms.InputTag('selectedTracks'),
+                                      cut = cms.string("eta < -1.4 && phi > 2.5"),
+                                      #cut = cms.string(""),
+                                      filter = cms.bool(True)
+                                      )
+
 # Track Multiplicity Selector
 selectedMultiplicityTracks = cms.EDFilter("TrackMultiplicityFilter",
                                           src = cms.InputTag('generalTracks'),
@@ -87,9 +94,21 @@ hltPathFilterTtbar = cms.EDFilter("HLTPathSelector",
 # Z->MuMu event selector
 ztoMMEventSelector = cms.EDFilter("ZtoMMEventSelector")
 muonTracks = cms.EDProducer("ZtoMMMuonTrackProducer")
+muonTracksFPixHole = cms.EDFilter("TrackSelector",
+                                  src = cms.InputTag('muonTracks'),
+                                  cut = cms.string("eta < -1.4 && phi > 2.5"),
+                                  #cut = cms.string(""),
+                                  filter = cms.bool(True)
+                                  )
 # Z->ee event selector
 ztoEEEventSelector = cms.EDFilter("ZtoEEEventSelector")
 electronTracks = cms.EDProducer("ZtoEEElectronTrackProducer")
+electronTracksFPixHole = cms.EDFilter("TrackSelector",
+                                      src = cms.InputTag('electronTracks'),
+                                      cut = cms.string("eta < -1.4 && phi > 2.5"),
+                                      #cut = cms.string(""),
+                                      filter = cms.bool(True)
+                                      )
 #ttbar event selector
 ttbarEventSelector = cms.EDFilter("ttbarEventSelector")
 ttbarTracks = cms.EDProducer("TtbarTrackProducer")
@@ -116,13 +135,26 @@ standaloneTrackMonitorMC = standaloneTrackMonitor.clone(
     doPUCorrection    = True,
     isMC              = True
     )
+standaloneTrackMonitorFPixHole = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksFPixHole",
+    trackInputTag     = "selectedTracksFPixHole",
+    )
+standaloneTrackMonitorMCFPixhole = standaloneTrackMonitor.clone(
+    folderName        = "highPurityTracksFPixHole",
+    trackInputTag     = "selectedTracksFPixHole",
+    puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
 standaloneValidationMinbias = cms.Sequence(
     hltPathFilter
     * selectedPrimaryVertices 
 #    * selectedMultiplicityTracks  # Use selectedMultiplicityTracks if needed nTracks > desired multiplicity
 #    * selectedAlcaRecoZBTracks
     * selectedTracks
+    * selectedTracksFPixHole
     * standaloneTrackMonitor
+    * standaloneTrackMonitorFPixHole
     * KshortMonitor
     * LambdaMonitor)
 
@@ -132,7 +164,9 @@ standaloneValidationMinbiasMC = cms.Sequence(
 #    * selectedMultiplicityTracks  # Use selectedMultiplicityTracks if needed nTracks > desired multiplicity
 #    * selectedAlcaRecoZBTracks
     * selectedTracks
+    * selectedTracksFPixHole
     * standaloneTrackMonitorMC
+    * standaloneTrackMonitorMCFPixHole
     * KshortMonitor
     * LambdaMonitor)
 
@@ -143,10 +177,27 @@ standaloneTrackMonitorK0 = standaloneTrackMonitor.clone(
     folderName = "K0Tracks",
     trackInputTag = 'KshortTracks',
     )
+KshortTracksFPixHole = cms.EDFilter("TrackSelector",
+                                  src = cms.InputTag('KshortTracks'),
+                                  cut = cms.string("eta < -1.4 && phi > 2.5"),
+                                  #cut = cms.string(""),
+                                  filter = cms.bool(True)
+                                  )
+standaloneTrackMonitorK0FPixHole = standaloneTrackMonitor.clone(
+    folderName = "K0TracksFPixHole",
+    trackInputTag = 'KshortTracksFPixHole',
+    )
 
 standaloneTrackMonitorK0MC = standaloneTrackMonitor.clone(
     folderName = "K0Tracks",
     trackInputTag = 'KshortTracks',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorK0MCFPixHole = standaloneTrackMonitor.clone(
+    folderName = "K0TracksFPixHole",
+    trackInputTag = 'KshortTracksFPixHole',
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
     doPUCorrection    = True,
     isMC              = True
@@ -156,10 +207,27 @@ standaloneTrackMonitorLambda = standaloneTrackMonitor.clone(
     folderName = "LambdaTracks",
     trackInputTag = 'LambdaTracks',
     )
+LambdaTracksFPixHole = cms.EDFilter("TrackSelector",
+                                  src = cms.InputTag('LambdaTracks'),
+                                  cut = cms.string("eta < -1.4 && phi > 2.5"),
+                                  #cut = cms.string(""),
+                                  filter = cms.bool(True)
+                                  )
 
+standaloneTrackMonitorLambdaFPixHole = standaloneTrackMonitor.clone(
+    folderName = "LambdaTracksFPixHole",
+    trackInputTag = 'LambdaTracksFPixHole',
+    )
 standaloneTrackMonitorLambdaMC = standaloneTrackMonitor.clone(
     folderName = "LambdaTracks",
     trackInputTag = 'LambdaTracks',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorLambdaMCFPixHole = standaloneTrackMonitor.clone(
+    folderName = "LambdaTracksFPixHole",
+    trackInputTag = 'LambdaTracksFPixHole',
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
     doPUCorrection    = True,
     isMC              = True
@@ -170,7 +238,9 @@ standaloneValidationK0s = cms.Sequence(
     * selectedPrimaryVertices
     * KShortEventSelector
     * KshortTracks
+    * KshortTracksFPixHole
     * standaloneTrackMonitorK0
+    * standaloneTrackMonitorK0FPixHole
     * KshortMonitor)
 
 standaloneValidationK0sMC = cms.Sequence(
@@ -178,7 +248,9 @@ standaloneValidationK0sMC = cms.Sequence(
     * selectedPrimaryVertices
     * KShortEventSelector
     * KshortTracks
+    * KshortTracksFPixHole
     * standaloneTrackMonitorK0MC
+    * standaloneTrackMonitorK0MCFPixHole
     * KshortMonitor)
 
 standaloneValidationLambdas = cms.Sequence(
@@ -186,7 +258,9 @@ standaloneValidationLambdas = cms.Sequence(
     * selectedPrimaryVertices
     * LambdaEventSelector
     * LambdaTracks
+    * LambdaTracksFPixHole
     * standaloneTrackMonitorLambda
+    * standaloneTrackMonitorLambdaFPixHole
     * LambdaMonitor)
 
 standaloneValidationLambdasMC = cms.Sequence(
@@ -194,7 +268,9 @@ standaloneValidationLambdasMC = cms.Sequence(
     * selectedPrimaryVertices
     * LambdaEventSelector
     * LambdaTracks
+    * LambdaTracksFPixHole
     * standaloneTrackMonitorLambdaMC
+    * standaloneTrackMonitorLambdaMCFPixHole
     * LambdaMonitor)
 
 ##################
@@ -204,10 +280,21 @@ standaloneTrackMonitorElec = standaloneTrackMonitor.clone(
     folderName = "ElectronTracks",
     trackInputTag = 'electronTracks',
     )
+standaloneTrackMonitorElecFPixHole = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksFPixHole",
+    trackInputTag = 'electronTracksFPixHole',
+    )
 
 standaloneTrackMonitorElecMC = standaloneTrackMonitor.clone(
     folderName = "ElectronTracks",
     trackInputTag = 'electronTracks',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorElecMCFPixHole = standaloneTrackMonitor.clone(
+    folderName = "ElectronTracksFPixHole",
+    trackInputTag = 'electronTracksFPixHole',
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
     doPUCorrection    = True,
     isMC              = True
@@ -222,20 +309,28 @@ ZEEDetailsMC = ZEEDetails.clone(
 standaloneValidationElec = cms.Sequence(
     hltPathFilterElectron
     * selectedTracks
+    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoEEEventSelector
     * electronTracks
-    * standaloneTrackMonitorElec   
+    * electronTracksFPixHole
+    * standaloneTrackMonitorElec
+    * standaloneTrackMonitorElecFPixHole   
     * standaloneTrackMonitor
+    * standaloneTrackMonitorFPixHole
     * ZEEDetails)
 standaloneValidationElecMC = cms.Sequence(
     hltPathFilterElectron
     * selectedTracks
+    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoEEEventSelector
     * electronTracks
+    * electronTracksFPixHole
     * standaloneTrackMonitorElecMC   
+    * standaloneTrackMonitorElecMCFPixHole
     * standaloneTrackMonitorMC
+    * standaloneTrackMonitorMCFPixHole
     * ZEEDetailsMC)
 
 ##################
@@ -245,9 +340,13 @@ standaloneTrackMonitorMuon = standaloneTrackMonitor.clone(
     folderName = "MuonTracks",
     trackInputTag = 'muonTracks',
     )
+standaloneTrackMonitorMuonFPix = standaloneTrackMonitor.clone(
+    folderName = "MuonTracksFPixHole",
+    trackInputTag = 'muonTracksFPixHole',
+    )
 standaloneTrackMonitorMuonMC = standaloneTrackMonitor.clone(
-    folderName = "MuonTracks",
-    trackInputTag = 'muonTracks',
+    folderName = "MuonTracksFPixHole",
+    trackInputTag = 'muonTracksFPixHole',
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
     doPUCorrection    = True,
     isMC              = True
@@ -256,20 +355,28 @@ standaloneTrackMonitorMuonMC = standaloneTrackMonitor.clone(
 standaloneValidationMuon = cms.Sequence(
     hltPathFilterMuon
     * selectedTracks
+    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoMMEventSelector
     * muonTracks
+    * muonTracksFPixHole
     * standaloneTrackMonitorMuon
-    * standaloneTrackMonitor)
+    * standaloneTrackMonitorMuonFPixHole
+    * standaloneTrackMonitor
+    * standaloneTrackMonitorFPixHole)
 
 standaloneValidationMuonMC = cms.Sequence(
     hltPathFilterMuon
     * selectedTracks
+    * selectedTracksFPixHole
     * selectedPrimaryVertices
     * ztoMMEventSelector
     * muonTracks
-    * standaloneTrackMonitorMuonMC 
-    * standaloneTrackMonitorMC)
+    * muonTracksFPixHole
+    * standaloneTrackMonitorMuonMC
+    * standaloneTrackMonitorMuonMCFPixHole 
+    * standaloneTrackMonitorMC
+    * standaloneTrackMonitorMCFPixHole)
 
 ##################
 # For ttbar
