@@ -139,7 +139,7 @@ standaloneTrackMonitorFPixHole = standaloneTrackMonitor.clone(
     folderName        = "highPurityTracksFPixHole",
     trackInputTag     = "selectedTracksFPixHole",
     )
-standaloneTrackMonitorMCFPixhole = standaloneTrackMonitor.clone(
+standaloneTrackMonitorMCFPixHole = standaloneTrackMonitor.clone(
     folderName        = "highPurityTracksFPixHole",
     trackInputTag     = "selectedTracksFPixHole",
     puScaleFactorFile = "PileupScaleFactor_316060_wrt_nVertex_ZeroBias.root",
@@ -340,11 +340,18 @@ standaloneTrackMonitorMuon = standaloneTrackMonitor.clone(
     folderName = "MuonTracks",
     trackInputTag = 'muonTracks',
     )
-standaloneTrackMonitorMuonFPix = standaloneTrackMonitor.clone(
+standaloneTrackMonitorMuonFPixHole = standaloneTrackMonitor.clone(
     folderName = "MuonTracksFPixHole",
     trackInputTag = 'muonTracksFPixHole',
     )
 standaloneTrackMonitorMuonMC = standaloneTrackMonitor.clone(
+    folderName = "MuonTracks",
+    trackInputTag = 'muonTracks',
+    puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
+    doPUCorrection    = True,
+    isMC              = True
+    )
+standaloneTrackMonitorMuonMCFPixHole = standaloneTrackMonitor.clone(
     folderName = "MuonTracksFPixHole",
     trackInputTag = 'muonTracksFPixHole',
     puScaleFactorFile = "PileupScaleFactor_316082_wrt_nVertex_DYToLL.root",
