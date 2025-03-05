@@ -23,7 +23,7 @@ selectedTracksFPixHole = cms.EDFilter("TrackSelector",
                                       src = cms.InputTag('selectedTracks'),
                                       cut = cms.string("eta < -1.4 && phi > 2.5"),
                                       #cut = cms.string(""),
-                                      filter = cms.bool(True)
+                                      filter = cms.bool(False)
                                       )
 
 # Track Multiplicity Selector
@@ -98,7 +98,7 @@ muonTracksFPixHole = cms.EDFilter("TrackSelector",
                                   src = cms.InputTag('muonTracks'),
                                   cut = cms.string("eta < -1.4 && phi > 2.5"),
                                   #cut = cms.string(""),
-                                  filter = cms.bool(True)
+                                  filter = cms.bool(False)
                                   )
 # Z->ee event selector
 ztoEEEventSelector = cms.EDFilter("ZtoEEEventSelector")
@@ -107,7 +107,7 @@ electronTracksFPixHole = cms.EDFilter("TrackSelector",
                                       src = cms.InputTag('electronTracks'),
                                       cut = cms.string("eta < -1.4 && phi > 2.5"),
                                       #cut = cms.string(""),
-                                      filter = cms.bool(True)
+                                      filter = cms.bool(False)
                                       )
 #ttbar event selector
 ttbarEventSelector = cms.EDFilter("ttbarEventSelector")
@@ -181,7 +181,7 @@ KshortTracksFPixHole = cms.EDFilter("TrackSelector",
                                   src = cms.InputTag('KshortTracks'),
                                   cut = cms.string("eta < -1.4 && phi > 2.5"),
                                   #cut = cms.string(""),
-                                  filter = cms.bool(True)
+                                  filter = cms.bool(False)
                                   )
 standaloneTrackMonitorK0FPixHole = standaloneTrackMonitor.clone(
     folderName = "K0TracksFPixHole",
@@ -211,7 +211,7 @@ LambdaTracksFPixHole = cms.EDFilter("TrackSelector",
                                   src = cms.InputTag('LambdaTracks'),
                                   cut = cms.string("eta < -1.4 && phi > 2.5"),
                                   #cut = cms.string(""),
-                                  filter = cms.bool(True)
+                                  filter = cms.bool(False)
                                   )
 
 standaloneTrackMonitorLambdaFPixHole = standaloneTrackMonitor.clone(
