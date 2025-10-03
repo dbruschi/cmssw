@@ -82,6 +82,7 @@ void TrackRefitter::fillDescriptions(edm::ConfigurationDescriptions &description
   edm::ParameterSetDescription desc;
   desc.add<bool>("TrajectoryInEvent", false);
   desc.add<bool>("useHitsSplitting", false);
+  desc.add<std::string>("MagneticFieldLabel", "");
   desc.add<edm::InputTag>("src", edm::InputTag(""));
   desc.add<std::string>("constraint", "");
   desc.add<edm::InputTag>("srcConstr", edm::InputTag(""));

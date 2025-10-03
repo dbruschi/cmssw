@@ -25,8 +25,10 @@ public:
 
 private:
   edm::ParameterSet pset_;
+  const std::string fieldlabel_;
   edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
   double plimit_;
+  bool forCVH_;
 };
 
 #endif
